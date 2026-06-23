@@ -17,15 +17,70 @@ const userSchema = new mongoose.Schema(
         password:{
             type: String,
             required: true,
+            select:false
         },
 
         role:{
             type: String,
             enum: ["student", "admin"],
             default: "student",
+        },
+         avatar:{
+            type:String,
+            default:""
+        },
+
+        branch:{
+            type:String,
+            default:""
+        },
+
+        semester:{
+            type:Number
+        },
+
+        bio:{
+            type:String,
+            default:""
+        },
+
+        skills:[
+            {
+                type:String
+            }
+        ],
+
+        achievements:[
+            {
+                type:String
+            }
+        ],
+
+        github:{
+            type:String,
+            default:""
+        },
+
+        linkedin:{
+            type:String,
+            default:""
+        },
+
+        portfolio:{
+            type:String,
+            default:""
+        },
+
+        resumeUrl:{
+            type:String,
+            default:""
+        },
+
+        contributionScore:{
+            type:Number,
+            default:0
         }
-    },{timestamps: true}
-);
+    },{timestamps: true});
 
 userSchema.pre("save", async function() {
     
