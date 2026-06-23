@@ -25,7 +25,8 @@ const userSchema = new mongoose.Schema(
             enum: ["student", "admin"],
             default: "student",
         },
-         avatar:{
+
+        avatar:{
             type:String,
             default:""
         },
