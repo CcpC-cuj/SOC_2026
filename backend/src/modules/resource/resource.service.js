@@ -1,8 +1,25 @@
 const Resource = require("./resource.model");
 const ApiError = require("../../utils/ApiError");
+const uploadToCloudinary = require("../../utils/uploadToCloudinary");
 
-const createResource = async(resourceData, userId) =>{
-    const resource = await Resource.create({...resourceData, uploadedBy: userId});
+const createResource = async(resourceData, file, userId) =>{
+
+    if(!file){
+        throw new ApiError(
+            400,
+            "PDF file is required"
+        );
+    }
+
+    const uploadResult = await uploadToCloudinary(file.buffer);
+    console.log(uploadResult);
+    
+    const resource = await Resource.create({
+        ...resourceData, 
+        fileUrl: uploadResult.secure_url,
+        originalFileName:file.originalname,
+        uploadedBy: userId
+    });
     
     return resource;
 };

@@ -49,6 +49,12 @@ const resourceSchema = new mongoose.Schema({
         lowercase: true,
     }],
 
+    originalFileName: {
+        type: String,
+        required: true
+    },
+
+
     fileUrl:{
         type: String,
         required: true,

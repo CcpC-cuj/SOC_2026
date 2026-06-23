@@ -35,8 +35,7 @@ const createResourceSchema = z.object({
     tags: z.array(
         z.string()
     ).default([]),
-
-    fileUrl: z.url()
+    
 });
 
 module.exports = createResourceSchema;

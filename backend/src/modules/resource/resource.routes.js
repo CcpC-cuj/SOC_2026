@@ -4,6 +4,7 @@ const router = express.Router();
 const authMiddleware = require("../../middleware/auth.middleware");
 const validate = require("../../middleware/validate.middleware");
 const authorize = require("../../middleware/authorize");
+const upload = require("../../middleware/upload.middleware");
 
 const createResourceSchema = require("../../validations/resource.validation");
 
@@ -17,7 +18,7 @@ router.get("/pending", authMiddleware
 
 
 //POST
-router.post("/", authMiddleware, validate(createResourceSchema), resourceController.createResource);
+router.post("/", authMiddleware, upload.single("file"), resourceController.createResource);
 
 //PATCH
 router.patch("/:id/approve",authMiddleware, authorize("admin"),resourceController.approveResource);
