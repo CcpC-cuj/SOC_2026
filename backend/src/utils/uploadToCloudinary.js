@@ -1,23 +1,21 @@
 const cloudinary = require("../config/cloudinary");
-const streamifier = require("streamifier");
 
-const uploadToCloudinary = (fileBuffer)=>{
+const uploadToCloudinary = async (
+    filePath,
+    folder,
+    resourceType = "auto"
+) => {
 
-    return new Promise((reslove, reject)=>{
-        const stream = cloudinary.uploader.upload_stream(
+    const result =
+        await cloudinary.uploader.upload(
+            filePath,
             {
-                folder: "soc/resources",
-                resource_type: "raw"
-            },
-            (error, result)=>{
-                if(error) reject(error);
-                reslove(result);
+                folder,
+                resource_type: resourceType
             }
         );
 
-        streamifier.createReadStream(fileBuffer)
-        .pipe(stream);
-    });
+    return result;
 };
 
-module.exports =uploadToCloudinary;
+module.exports = uploadToCloudinary;

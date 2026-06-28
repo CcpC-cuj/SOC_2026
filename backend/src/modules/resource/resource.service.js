@@ -1,6 +1,7 @@
 const Resource = require("./resource.model");
 const ApiError = require("../../utils/ApiError");
 const uploadToCloudinary = require("../../utils/uploadToCloudinary");
+const fs = require("fs");
 
 const createResource = async(resourceData, file, userId) =>{
 
@@ -11,17 +12,28 @@ const createResource = async(resourceData, file, userId) =>{
         );
     }
 
-    const uploadResult = await uploadToCloudinary(file.buffer);
-    console.log(uploadResult);
+    try{
+        const uploadResult = await uploadToCloudinary(
+            file.path,
+            "soc/resources",
+            "raw"
+        );
+        console.log(uploadResult);
     
-    const resource = await Resource.create({
-        ...resourceData, 
-        fileUrl: uploadResult.secure_url,
-        originalFileName:file.originalname,
-        uploadedBy: userId
-    });
+        const resource = await Resource.create({
+            ...resourceData, 
+            fileUrl: uploadResult.secure_url,
+            originalFileName:file.originalname,
+            uploadedBy: userId
+        });
     
-    return resource;
+        return resource;
+    }
+    finally{
+        if (file?.path && fs.existsSync(file.path)) {
+        fs.unlinkSync(file.path);
+        }
+    }
 };
 
 const getAllResources = async(page, limit, search, subject, semester, tag, faculty)=>{
@@ -81,10 +93,12 @@ const getAllResources = async(page, limit, search, subject, semester, tag, facul
 
 const getResourceById = async(id)=>{
 
-    const resource = await Resource.findById(id)
-    .populate("uploadedBy", "name email");
+    const resource = await Resource.findOne({
+        _id: id,
+        approved: true
+    }).populate("uploadedBy", "name email");
 
-    if(!resource || !resource.approved){
+    if (!resource) {
         throw new ApiError(404, "Resource not found!");
     }
 
