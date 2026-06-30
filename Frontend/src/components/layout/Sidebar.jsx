@@ -17,7 +17,7 @@ const NAV = [
   ]},
 ];
 
-export default function Sidebar({ activePage, onNavigate }) {
+export default function Sidebar({ activePage, onNavigate, userRole }) {
   return (
     <aside className="w-[230px] bg-gradient-to-b from-green-50 via-green-100/60 to-yellow-50 border-r-2 border-yellow-200 flex flex-col gap-0.5 px-2.5 py-4 overflow-y-auto shrink-0">
 
@@ -47,18 +47,19 @@ export default function Sidebar({ activePage, onNavigate }) {
         </div>
       ))}
 
-      <div className="mt-auto pt-3 border-t-2 border-yellow-200">
-        <button onClick={() => onNavigate("admin")}
-          className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-all cursor-pointer border-0
-            ${activePage === "admin"
-              ? "bg-blue-500 text-white shadow-sm shadow-blue-500/30"
-              : "text-blue-900/80 hover:bg-yellow-100 hover:text-blue-900"}`}>
-          <span className="w-5 text-center">🛡️</span>
-          <span className="flex-1 text-left font-medium">Admin</span>
-          <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-yellow-300 text-blue-900 font-bold">Staff</span>
-        </button>
-      </div>
+      {userRole === "admin" && (
+        <div className="mt-auto pt-3 border-t-2 border-yellow-200">
+          <button onClick={() => onNavigate("admin")}
+            className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-all cursor-pointer border-0
+              ${activePage === "admin"
+                ? "bg-blue-500 text-white shadow-sm shadow-blue-500/30"
+                : "text-blue-900/80 hover:bg-yellow-100 hover:text-blue-900"}`}>
+            <span className="w-5 text-center">🛡️</span>
+            <span className="flex-1 text-left font-medium">Admin</span>
+            <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-yellow-300 text-blue-900 font-bold">Staff</span>
+          </button>
+        </div>
+      )}
     </aside>
-
   );
 }
