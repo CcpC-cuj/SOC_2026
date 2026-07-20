@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { Card, Pill, Btn, SectionTitle, FilterChips, PageWrap } from "../ui";
-
-const RESOURCES = [
-  { title: "Data Structures — Complete Notes", meta: "Sem 5 · DS · 4.2 MB", tags: [["Trees","blue"],["Graphs","purple"],["DP","teal"]], contributor: "RK", contribName: "Rahul K.", downloads: 142, bg: "bg-red-500/10", color: "text-red-400", icon: "📄" },
-  { title: "OS — Process Management Unit 4", meta: "Sem 5 · OS · 2.8 MB", tags: [["Scheduling","green"],["Deadlock","amber"]], contributor: "SM", contribName: "Sneha M.", downloads: 98, bg: "bg-emerald-500/10", color: "text-emerald-400", icon: "📄" },
-  { title: "DBMS — Normalization & SQL Queries", meta: "Sem 5 · DBMS · 1.9 MB", tags: [["1NF–BCNF","purple"],["SQL","teal"]], contributor: "AJ", contribName: "Arjun J.", downloads: 76, bg: "bg-violet-500/10", color: "text-violet-400", icon: "📊" },
-  { title: "CN — TCP/IP & Routing Protocols", meta: "Sem 5 · CN · 3.1 MB", tags: [["TCP","teal"],["Routing","blue"]], contributor: "PD", contribName: "Priya D.", downloads: 64, bg: "bg-teal-500/10", color: "text-teal-400", icon: "💻" },
-  { title: "DS Lab Manual — All Experiments", meta: "Sem 5 · DS Lab · 5.4 MB", tags: [["Lab","amber"],["C++","gray"]], contributor: "NK", contribName: "Nikhil K.", downloads: 53, bg: "bg-amber-500/10", color: "text-amber-400", icon: "⚙️" },
-];
+import { RESOURCES } from "../../data/content";
 
 const SEM_FILTERS = ["All", "Sem 3", "Sem 4", "Sem 5", "Sem 6"];
 const TYPE_FILTERS = ["Notes", "Lab", "Assignments", "Tutorials"];

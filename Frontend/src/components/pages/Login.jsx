@@ -1,6 +1,23 @@
 import { useState } from "react";
 import logo from "../../assets/cuj-logo.png";
 
+const CUJ_EMAIL_DOMAIN = "cuj.ac.in";
+
+function buildExpectedEmailPattern(name, rollno) {
+  const firstName = name.trim().split(/\s+/)[0]?.toLowerCase() || "";
+  const roll = rollno.trim().toLowerCase();
+  if (!firstName || !roll) return null;
+  return new RegExp(`^${firstName}\\.${roll}@${CUJ_EMAIL_DOMAIN}$`, "i");
+}
+
+function expectedEmailPlaceholder(name, rollno) {
+  const firstName = name.trim().split(/\s+/)[0]?.toLowerCase();
+  const roll = rollno.trim().toLowerCase();
+  return firstName && roll
+    ? `${firstName}.${roll}@${CUJ_EMAIL_DOMAIN}`
+    : `firstname.rollnumber@${CUJ_EMAIL_DOMAIN}`;
+}
+
 export default function Login({ onLogin }) {
   const [tab, setTab] = useState("login");
   const [form, setForm] = useState({ rollno: "", password: "", confirmPassword: "", name: "", sem: "5", email: "", passkey: "" });
@@ -21,6 +38,15 @@ export default function Login({ onLogin }) {
       if (!form.name || !form.rollno || !form.password) { setError("Name, roll number and password are required."); return; }
       if (form.password.length < 6) { setError("Password must be at least 6 characters."); return; }
       if (form.password !== form.confirmPassword) { setError("Passwords do not match."); return; }
+
+      if (form.email) {
+        const pattern = buildExpectedEmailPattern(form.name, form.rollno);
+        console.log("DEBUG email check:", { email: form.email, name: form.name, rollno: form.rollno, pattern, matches: pattern?.test(form.email.trim()) });
+        if (!pattern || !pattern.test(form.email.trim())) {
+          setError(`Email must match the format ${expectedEmailPlaceholder(form.name, form.rollno)}`);
+          return;
+        }
+      }
     }
 
     if (tab === "admin") {
@@ -133,15 +159,18 @@ export default function Login({ onLogin }) {
               </div>
             )}
 
-            {/* Optional email — register only, clearly marked optional */}
+            {/* Optional email — register only, must match firstname.rollno@cuj.ac.in */}
             {tab === "register" && (
               <div>
                 <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">
                   University email <span className="text-[#5a6a85]/70 font-normal">(optional — add later if not issued yet)</span>
                 </label>
-                <input name="email" type="email" value={form.email} onChange={handle} placeholder="aryan@cuj.ac.in (optional)"
+                <input name="email" type="email" value={form.email} onChange={handle}
+                  placeholder={expectedEmailPlaceholder(form.name, form.rollno)}
                   className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-blue-500/50 transition-colors" />
-                <p className="text-[10px] text-[#5a6a85] mt-1">New students can skip this — you can add it from your profile once it's issued.</p>
+                <p className="text-[10px] text-[#5a6a85] mt-1">
+                  Format: firstname.rollnumber@cuj.ac.in — must match your name and roll number above.
+                </p>
               </div>
             )}
 

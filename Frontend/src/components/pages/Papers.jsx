@@ -1,13 +1,6 @@
 import { useState } from "react";
 import { Card, Pill, Btn, SectionTitle, TabBar, StatCard, PageWrap, Select } from "../ui";
-
-const PAPERS = [
-  { name: "Data Structures — End Sem 2024", meta: "AKTU · Sem 5 · Dec 2024", type: "End-sem", typeColor: "blue", tags: [["DP","teal"],["Trees","purple"],["Graphs","blue"]] },
-  { name: "OS — End Sem 2024", meta: "AKTU · Sem 5 · Dec 2024", type: "End-sem", typeColor: "blue", tags: [["Scheduling","green"],["Deadlock","amber"]] },
-  { name: "DBMS — Mid Sem 2024", meta: "AKTU · Sem 5 · Sep 2024", type: "Mid-sem", typeColor: "purple", tags: [["SQL","purple"],["ER Diagram","teal"]] },
-  { name: "Data Structures — End Sem 2023", meta: "AKTU · Sem 5 · Dec 2023", type: "End-sem", typeColor: "blue", tags: [["Hashing","teal"],["Sorting","blue"]] },
-  { name: "CN — Viva Questions Bank 2024", meta: "Dept. · Sem 5 · Jan 2024", type: "Viva", typeColor: "amber", tags: [["OSI Model","amber"],["TCP/IP","green"]] },
-];
+import { PAPERS } from "../../data/content";
 
 const TOPICS = [
   { name: "Dynamic programming", count: 22, pct: 90, hot: true, color: "bg-blue-500/55" },
