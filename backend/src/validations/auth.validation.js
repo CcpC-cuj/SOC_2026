@@ -29,26 +29,35 @@ const registerSchema = z.object({
             "Roll number must be in the format CUJ23UG0001"
         ),
     
-        collegeEmail: z
-            .union([
-                z.literal(""),
-                z.string()
-                    .trim()
-                    .email("Invalid email address")
-                    .endsWith(
-                        "@cuj.ac.in",
-                        "College email must end with @cuj.ac.in"
-                    )
-            ])
-            .optional()
+    collegeEmail: z
+        .union([
+            z.literal(""),
+            z.string()
+                .trim()
+                .email("Invalid email address")
+                .endsWith(
+                    "@cuj.ac.in",
+                    "College email must end with @cuj.ac.in"
+                )
+        ])
+        .optional(),
+
+    semester:
+        z.coerce.number()
+        .min(1)
+        .max(8),
 
 });
 
 const loginSchema = z.object({
 
-    email: z
-        .email(
-            "Invalid email format"
+    rollNumber: z
+        .string()
+        .trim()
+        .toUpperCase()
+        .regex(
+            /^CUJ\d{2}[A-Z]{2}\d{4}$/,
+            "Roll number must be in the format CUJ23UG0001"
         ),
 
     password: z

@@ -8,7 +8,11 @@ const registerUser = async(userData)=>{
         email: userData.email
     });
 
-    if(existingUser){
+    const existingRoll = await User.findOne({
+        rollNumber: userData.rollNumber
+    });
+
+    if(existingUser || existingRoll){
         throw new ApiError(404, "User already exist");
     }
 
@@ -23,9 +27,9 @@ const registerUser = async(userData)=>{
     };
 };
 
-const loginUser = async(email, password)=>{
+const loginUser = async(rollNumber, password)=>{
 
-    const user = await User.findOne({email}).select("+password");
+    const user = await User.findOne({rollNumber}).select("+password");
 
     if(!user){
         throw new ApiError(401, "Invalid Credentials!");

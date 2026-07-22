@@ -13,8 +13,8 @@ const register = asyncHandler(async(req, res)=>{
 
 const login = asyncHandler(async(req, res)=>{
 
-    const {email, password} = req.body;
-    const user = await authService.loginUser(email, password);
+    const {rollNumber, password} = req.body;
+    const user = await authService.loginUser(rollNumber, password);
 
     res.status(200).json(
         new ApiResponse(201, "User Logged in Successfully", user)

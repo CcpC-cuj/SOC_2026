@@ -1,5 +1,6 @@
 const mongoose = require("mongoose");
 const bcrypt = require("bcryptjs");
+const { required } = require("../../validations/profile.validation");
 
 const userSchema = new mongoose.Schema(
     {
@@ -52,7 +53,8 @@ const userSchema = new mongoose.Schema(
         },
 
         semester:{
-            type:Number
+            type:Number,
+            required: true
         },
 
         bio:{
