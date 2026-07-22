@@ -19,6 +19,21 @@ const userSchema = new mongoose.Schema(
             required: true,
             select:false
         },
+        rollNumber: {
+            type: String,
+            required: true,
+            unique: true,
+            uppercase: true,
+            trim: true,
+            index:true
+        },
+
+        collegeEmail: {
+            type: String,
+            default: "",
+            trim: true,
+            lowercase: true
+        },
 
         role:{
             type: String,
