@@ -1,5 +1,6 @@
 import { useState } from "react";
 import logo from "../../assets/cuj-logo.png";
+import { loginUser } from "../../api/auth";
 
 const CUJ_EMAIL_DOMAIN = "cuj.ac.in";
 
