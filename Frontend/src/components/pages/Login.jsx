@@ -2,26 +2,27 @@ import { useState } from "react";
 import logo from "../../assets/cuj-logo.png";
 import { loginUser } from "../../api/auth";
 
+const GMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
 const CUJ_EMAIL_DOMAIN = "cuj.ac.in";
 
-function buildExpectedEmailPattern(name, rollno) {
+function buildExpectedUniEmailPattern(name, regno) {
   const firstName = name.trim().split(/\s+/)[0]?.toLowerCase() || "";
-  const roll = rollno.trim().toLowerCase();
-  if (!firstName || !roll) return null;
-  return new RegExp(`^${firstName}\\.${roll}@${CUJ_EMAIL_DOMAIN}$`, "i");
+  const reg = regno.trim().toLowerCase();
+  if (!firstName || !reg) return null;
+  return new RegExp(`^${firstName}\\.${reg}@${CUJ_EMAIL_DOMAIN}$`, "i");
 }
 
-function expectedEmailPlaceholder(name, rollno) {
+function expectedUniEmailPlaceholder(name, regno) {
   const firstName = name.trim().split(/\s+/)[0]?.toLowerCase();
-  const roll = rollno.trim().toLowerCase();
-  return firstName && roll
-    ? `${firstName}.${roll}@${CUJ_EMAIL_DOMAIN}`
-    : `firstname.rollnumber@${CUJ_EMAIL_DOMAIN}`;
+  const reg = regno.trim().toLowerCase();
+  return firstName && reg
+    ? `${firstName}.${reg}@${CUJ_EMAIL_DOMAIN}`
+    : `firstname.regno@${CUJ_EMAIL_DOMAIN}`;
 }
 
 export default function Login({ onLogin }) {
   const [tab, setTab] = useState("login");
-  const [form, setForm] = useState({ rollno: "", password: "", confirmPassword: "", name: "", sem: "5", email: "", passkey: "" });
+  const [form, setForm] = useState({ regno: "", password: "", confirmPassword: "", name: "", sem: "5", email: "", uniEmail: "", passkey: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,26 +33,31 @@ export default function Login({ onLogin }) {
     setError("");
 
     if (tab === "login") {
-      if (!form.rollno || !form.password) { setError("Please enter your roll number and password."); return; }
+      if (!form.regno || !form.password) { setError("Please enter your registration number and password."); return; }
     }
 
     if (tab === "register") {
-      if (!form.name || !form.rollno || !form.password) { setError("Name, roll number and password are required."); return; }
+      if (!form.name || !form.regno || !form.password) { setError("Name, registration number and password are required."); return; }
       if (form.password.length < 6) { setError("Password must be at least 6 characters."); return; }
       if (form.password !== form.confirmPassword) { setError("Passwords do not match."); return; }
 
-      if (form.email) {
-        const pattern = buildExpectedEmailPattern(form.name, form.rollno);
-        console.log("DEBUG email check:", { email: form.email, name: form.name, rollno: form.rollno, pattern, matches: pattern?.test(form.email.trim()) });
-        if (!pattern || !pattern.test(form.email.trim())) {
-          setError(`Email must match the format ${expectedEmailPlaceholder(form.name, form.rollno)}`);
+      if (!form.email) { setError("Email is required."); return; }
+      if (!GMAIL_PATTERN.test(form.email.trim())) {
+        setError("Email must be a valid @gmail.com address.");
+        return;
+      }
+
+      if (form.uniEmail) {
+        const pattern = buildExpectedUniEmailPattern(form.name, form.regno);
+        if (!pattern || !pattern.test(form.uniEmail.trim())) {
+          setError(`University email must match the format ${expectedUniEmailPlaceholder(form.name, form.regno)}`);
           return;
         }
       }
     }
 
     if (tab === "admin") {
-      if (!form.rollno || !form.password) { setError("Please fill all required fields."); return; }
+      if (!form.regno || !form.password) { setError("Please fill all required fields."); return; }
       if (!form.passkey) { setError("Security passkey is required for admin login."); return; }
       if (form.passkey !== "CUJ@CSE2025") { setError("Invalid security passkey. Please contact HOD or IT Cell."); return; }
     }
@@ -115,12 +121,12 @@ export default function Login({ onLogin }) {
               </div>
             )}
 
-            {/* Roll number — shown on login + register */}
+            {/* Registration number — shown on login + register */}
             {(tab === "login" || tab === "register") && (
               <div className="grid grid-cols-2 gap-3">
                 <div className={tab === "login" ? "col-span-2" : ""}>
-                  <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">Roll number</label>
-                  <input name="rollno" value={form.rollno} onChange={handle} placeholder="23CUCSE001"
+                  <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">Registration number</label>
+                  <input name="regno" value={form.regno} onChange={handle} placeholder="23CUCSE001"
                     className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-blue-500/50 transition-colors" />
                 </div>
                 {tab === "register" && (
@@ -138,7 +144,7 @@ export default function Login({ onLogin }) {
             {tab === "admin" && (
               <div>
                 <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">Admin ID</label>
-                <input name="rollno" value={form.rollno} onChange={handle} placeholder="ADMIN001"
+                <input name="regno" value={form.regno} onChange={handle} placeholder="ADMIN001"
                   className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-blue-500/50 transition-colors" />
               </div>
             )}
@@ -149,7 +155,7 @@ export default function Login({ onLogin }) {
               </label>
               <input name="password" type="password" value={form.password} onChange={handle} placeholder="••••••••"
                 className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-blue-500/50 transition-colors" />
-              {tab === "register" && <p className="text-[10px] text-[#5a6a85] mt-1">Minimum 6 characters. You choose this — no email required.</p>}
+              {tab === "register" && <p className="text-[10px] text-[#5a6a85] mt-1">Minimum 6 characters.</p>}
             </div>
 
             {tab === "register" && (
@@ -160,17 +166,31 @@ export default function Login({ onLogin }) {
               </div>
             )}
 
-            {/* Optional email — register only, must match firstname.rollno@cuj.ac.in */}
+            {/* Compulsory Gmail address — register only */}
+            {tab === "register" && (
+              <div>
+                <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">
+                  Email <span className="text-red-400">*</span>
+                </label>
+                <input name="email" type="email" value={form.email} onChange={handle}
+                  placeholder="yourname@gmail.com" required
+                  className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-blue-500/50 transition-colors" />
+                <p className="text-[10px] text-[#5a6a85] mt-1">
+                  Must be a valid @gmail.com address.
+                </p>
+              </div>
+            )}
+
             {tab === "register" && (
               <div>
                 <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">
                   University email <span className="text-[#5a6a85]/70 font-normal">(optional — add later if not issued yet)</span>
                 </label>
-                <input name="email" type="email" value={form.email} onChange={handle}
-                  placeholder={expectedEmailPlaceholder(form.name, form.rollno)}
+                <input name="uniEmail" type="email" value={form.uniEmail} onChange={handle}
+                  placeholder={expectedUniEmailPlaceholder(form.name, form.regno)}
                   className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-blue-500/50 transition-colors" />
                 <p className="text-[10px] text-[#5a6a85] mt-1">
-                  Format: firstname.rollnumber@cuj.ac.in — must match your name and roll number above.
+                  Format: firstname.regno@cuj.ac.in — must match your name and registration number above.
                 </p>
               </div>
             )}
@@ -217,7 +237,7 @@ export default function Login({ onLogin }) {
         <p className="text-center text-[11px] text-[#5a6a85] mt-5 leading-relaxed">
           {tab === "admin"
             ? <>Admin access is restricted. Unauthorized login attempts are logged.</>
-            : <>New here? Register with your Roll Number — no university email needed to get started.</>}
+            : <>New here? Register with your Registration Number and Gmail address to get started.</>}
         </p>
       </div>
     </div>
