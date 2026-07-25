@@ -1,6 +1,6 @@
 import { useState } from "react";
 import logo from "../../assets/cuj-logo.png";
-import { loginUser } from "../../api/auth";
+import { loginUser, registerUser } from "../../api/auth";
 
 const GMAIL_PATTERN = /^[a-zA-Z0-9._%+-]+@gmail\.com$/i;
 const CUJ_EMAIL_DOMAIN = "cuj.ac.in";
@@ -28,7 +28,7 @@ export default function Login({ onLogin }) {
 
   const handle = (e) => setForm((f) => ({ ...f, [e.target.name]: e.target.value }));
 
-  const submit = (e) => {
+  const submit = async (e) => {
     e.preventDefault();
     setError("");
 
@@ -63,8 +63,61 @@ export default function Login({ onLogin }) {
     }
 
     setLoading(true);
-    setTimeout(() => { setLoading(false); onLogin(tab === "admin" ? "admin" : "student"); }, 1200);
-  };
+
+try {
+  if (tab === "login") {
+    const response = await loginUser({
+      rollNumber: form.regno,
+      password: form.password,
+    });
+
+    localStorage.setItem(
+      "token",
+      response.data.data.token
+    );
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(response.data.data.user)
+    );
+
+    onLogin("student");
+  }
+// REGISTER
+  if (tab === "register") {
+    const response = await registerUser({
+      name: form.name,
+      email: form.email,
+      password: form.password,
+      rollNumber: form.regno,
+      semester: form.sem,
+    });
+
+    localStorage.setItem("token", response.data.data.token);
+
+    localStorage.setItem(
+      "user",
+      JSON.stringify(response.data.data.user)
+    );
+
+    onLogin("student");
+  }
+
+  // Keep the current admin login
+  if (tab === "admin") {
+    onLogin("admin");
+  }
+
+  // Register integration will be added later
+
+} catch (error) {
+  setError(
+    error.response?.data?.message ||
+    "Login failed. Please check your credentials."
+  );
+} finally {
+  setLoading(false);
+}};
 
   return (
     <div className="min-h-screen bg-[#fbf7ec] flex flex-col items-center justify-center px-4 relative overflow-hidden">
