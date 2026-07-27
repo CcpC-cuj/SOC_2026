@@ -113,12 +113,13 @@ try {
 } catch (error) {
   setError(
     error.response?.data?.message ||
-    "Login failed. Please check your credentials."
+      (tab === "register"
+        ? "Registration failed. Please try again."
+        : "Login failed. Please check your credentials.")
   );
 } finally {
   setLoading(false);
 }};
-
   return (
     <div className="min-h-screen bg-[#fbf7ec] flex flex-col items-center justify-center px-4 relative overflow-hidden">
 

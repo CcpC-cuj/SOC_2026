@@ -1,6 +1,12 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Card, Pill, Btn, SectionTitle, PageWrap } from "../ui";
 import logo from "../../assets/cuj-logo.png";
+import {
+  getProfile,
+  updateProfile,
+  uploadAvatar,
+  uploadResume,
+} from "../../api/profile";
 
 const ALL_SKILLS = ["React","Python","Node.js","Machine Learning","MongoDB","C++","Data Structures","Java","Tailwind CSS","Express.js","MySQL","Git/GitHub"];
 const ACHIEVEMENT_ICONS = ["🏆","⭐","📚","🎯","🥇","🚀","💡","🔥","🎓","📜"];
@@ -31,33 +37,85 @@ export default function Profile({ onNavigate }) {
   const fileInputRef = useRef(null);
   const resumeInputRef = useRef(null);
 
-  const [profile, setProfile] = useState({
-    name: "Aryan Kumar",
-    rollno: "23CUCSE001",
-    programme: "B.Tech CSE",
-    sem: "5",
-    batch: "2022–26",
-    bio: "Passionate about ML and full-stack dev. Building cool things one commit at a time.",
-    skills: ["React", "Python", "Node.js", "Machine Learning", "MongoDB", "C++", "Data Structures"],
-    photo: null,
-    resume: null, // { name, size, type, dataUrl, uploadedAt }
-    achievements: [
-      { icon: "🏆", title: "HackBIT 2024", subtitle: "Finalist" },
-      { icon: "⭐", title: "Top contributor", subtitle: "Oct 2024" },
-      { icon: "📚", title: "142 resources", subtitle: "shared" },
-    ],
-  });
+  const user = JSON.parse(localStorage.getItem("user")) || {};
 
-  const [draft, setDraft] = useState(profile);
+const [profile, setProfile] = useState(null);
+const [draft, setDraft] = useState(null);
+
+useEffect(() => {
+  const fetchProfile = async () => {
+    try {
+      const res = await getProfile();
+
+      const user = res.data.data;
+
+      const profileData = {
+        name: user.name || "",
+        rollno: user.rollNumber || "",
+        programme: user.branch || "B.Tech CSE",
+        sem: user.semester || "",
+        batch: "",
+        bio: user.bio || "",
+        skills: user.skills || [],
+        photo: user.avatar || null,
+        resume: user.resumeUrl || null,
+        achievements: user.achievements || [],
+      };
+
+      setProfile(profileData);
+      setDraft(profileData);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  fetchProfile();
+}, []);
+  
 
   const startEdit = () => { setDraft(profile); setEditing(true); setSaved(false); };
   const cancelEdit = () => { setDraft(profile); setEditing(false); };
-  const saveEdit = () => {
-    setProfile(draft);
+const saveEdit = async () => {
+   console.log("Save button clicked");
+  try {
+    console.log("Draft:", draft);
+    const res = await updateProfile({
+      name: draft.name,
+      bio: draft.bio,
+      branch: draft.programme,
+      semester: draft.sem,
+      skills: draft.skills,
+      achievements: draft.achievements,
+      
+    });
+console.log("Response Data:", res.data);
+console.log("User Data:", res.data.data);
+    const user = res.data.data;
+
+    const updatedProfile = {
+      ...draft,
+      photo: user.avatar,
+      resume: user.resumeUrl,
+    };
+console.log("Updated Profile:", updatedProfile);
+    setProfile(updatedProfile);
+    setDraft(updatedProfile);
+
+    localStorage.setItem("user", JSON.stringify(user));
+
     setEditing(false);
+    console.log("editing set to false");
     setSaved(true);
+
     setTimeout(() => setSaved(false), 2500);
-  };
+  } catch (err) {
+    console.error(err);
+    alert(err.response?.data?.message || "Profile update failed");
+  }
+};
+
+  
+    
 
   const handle = (e) => setDraft((d) => ({ ...d, [e.target.name]: e.target.value }));
 
@@ -148,7 +206,15 @@ export default function Profile({ onNavigate }) {
   };
   const addAchievement = () => setDraft((d) => ({ ...d, achievements: [...d.achievements, { icon: "🏆", title: "", subtitle: "" }] }));
   const removeAchievement = (index) => setDraft((d) => ({ ...d, achievements: d.achievements.filter((_, i) => i !== index) }));
-
+if (!profile || !draft) {
+  return (
+    <PageWrap>
+      <div className="text-center py-20 text-[#5a6a85]">
+        Loading profile...
+      </div>
+    </PageWrap>
+  );
+}
   const initials = (editing ? draft.name : profile.name).split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
   const displayPhoto = editing ? draft.photo : profile.photo;
   const displayResume = editing ? draft.resume : profile.resume;
@@ -250,7 +316,15 @@ export default function Profile({ onNavigate }) {
               <div className="flex gap-2 mt-3 flex-wrap">
                 {editing ? (
                   <>
-                    <Btn size="sm" onClick={saveEdit}>💾 Save</Btn>
+                    <Btn
+  size="sm"
+  onClick={() => {
+    console.log("Save button clicked");
+    saveEdit();
+  }}
+>
+  💾 Save
+</Btn>
                     <Btn variant="ghost" size="sm" onClick={cancelEdit}>Cancel</Btn>
                   </>
                 ) : (
