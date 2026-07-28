@@ -241,10 +241,10 @@ try {
                   University email <span className="text-[#5a6a85]/70 font-normal">(optional — add later if not issued yet)</span>
                 </label>
                 <input name="uniEmail" type="email" value={form.uniEmail} onChange={handle}
-                  placeholder={expectedUniEmailPlaceholder(form.name, form.regno)}
+                  placeholder="firstname.rollnumber@cuj.ac.in"
                   className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-blue-500/50 transition-colors" />
                 <p className="text-[10px] text-[#5a6a85] mt-1">
-                  Format: firstname.regno@cuj.ac.in — must match your name and registration number above.
+                  Format: firstname.rollnumber@cuj.ac.in
                 </p>
               </div>
             )}
