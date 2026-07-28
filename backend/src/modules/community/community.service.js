@@ -12,8 +12,7 @@ const createPost = async (userId, postData) => {
     
 };
 
-const deletePost = async(postId, usearId, role)=>{
-
+const deletePost = async(postId, userId, role)=>{
     const post = await Community.findById(postId);
 
     if(!post){
