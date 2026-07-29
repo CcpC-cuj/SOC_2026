@@ -81,7 +81,7 @@ try {
       JSON.stringify(response.data.data.user)
     );
 
-    onLogin("student");
+    onLogin();
   }
 // REGISTER
   if (tab === "register") {
@@ -100,12 +100,12 @@ try {
       JSON.stringify(response.data.data.user)
     );
 
-    onLogin("student");
+    onLogin();
   }
 
   // Keep the current admin login
   if (tab === "admin") {
-    onLogin("admin");
+    onLogin();
   }
 
   // Register integration will be added later

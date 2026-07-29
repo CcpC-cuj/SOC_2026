@@ -17,6 +17,7 @@ const resourceSchema = new mongoose.Schema({
         type: String,
         required: true,
         trim: true,
+        index: true
     },
 
     resourceType:{
@@ -26,9 +27,9 @@ const resourceSchema = new mongoose.Schema({
             "notes",
             "assignment",
             "lab",
-            "ppt",
             "tutorial"
-        ]
+        ],
+        index: true
     },
 
     faculty:{
@@ -43,11 +44,11 @@ const resourceSchema = new mongoose.Schema({
         }
     },
 
-    tags:[{
-        type: String,
-        trim: true,
-        lowercase: true,
-    }],
+    semester:{
+        type: Number,
+        required: true,
+        index: true
+    },
 
     originalFileName: {
         type: String,

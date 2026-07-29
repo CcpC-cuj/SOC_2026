@@ -23,24 +23,17 @@ const getAllResources = asyncHandler(async(req, res)=>{
     const search =req.query.search || "";
     const subject =req.query.subject || "";
     const semester =req.query.semester? Number(req.query.semester): null;
-    const tag =req.query.tag || "";
+    const resourceType =req.query.resourceType || "";
     const faculty = req.query.faculty || "";
 
     const {resources, totalResources} = await resourceService
-    .getAllResources(page, limit, search, subject, semester, tag, faculty);
+    .getAllResources({page, limit, search, subject, semester, resourceType, faculty});
 
     const totalPages = Math.ceil(totalResources/limit);
 
     res.status(200).json(
         new ApiResponse(200, "Resource fetched successfully",{
             resources,
-
-            pgination:{
-                page,
-                limit,
-                totalResources,
-                totalPages
-            }
         })
     );
 });

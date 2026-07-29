@@ -23,7 +23,6 @@ const createResourceSchema = z.object({
         "notes",
         "assignment",
         "lab",
-        "ppt",
         "tutorial"
     ]),
 
@@ -31,10 +30,6 @@ const createResourceSchema = z.object({
         name: z.string().optional(),
         department: z.string().optional()
     }),
-
-    tags: z.array(
-        z.string()
-    ).default([]),
     
 });
 
