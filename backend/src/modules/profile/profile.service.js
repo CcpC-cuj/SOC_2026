@@ -116,10 +116,26 @@ const uploadAvatar = async(userId, file)=>{
     }
 }
 
+const deleteAvatar = async(userId)=>{
+    const user = await User.findById(userId);
+
+    if(!user){
+        throw new ApiError(404, "User not found");
+    }
+
+    const updatedUser  = await User.findByIdAndUpdate(userId,
+        {avatar:""},
+        {new: true}
+    );
+
+    return updatedUser;
+}
+
 module.exports = {
     getMyProfile,
     updateProfile,
     uploadResume,
     uploadAvatar,
-    deleteResume
+    deleteResume,
+    deleteAvatar
 };
