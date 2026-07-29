@@ -6,514 +6,942 @@ import {
   updateProfile,
   uploadAvatar,
   uploadResume,
+  removeAvatar,
+  removeResume,
 } from "../../api/profile";
+const ALL_SKILLS = [
+  "React",
+  "Python",
+  "Node.js",
+  "Machine Learning",
+  "MongoDB",
+  "C++",
+  "Data Structures",
+  "Java",
+  "Tailwind CSS",
+  "Express.js",
+  "MySQL",
+  "Git/GitHub",
+];
 
-const ALL_SKILLS = ["React","Python","Node.js","Machine Learning","MongoDB","C++","Data Structures","Java","Tailwind CSS","Express.js","MySQL","Git/GitHub"];
-const ACHIEVEMENT_ICONS = ["🏆","⭐","📚","🎯","🥇","🚀","💡","🔥","🎓","📜"];
+const ACHIEVEMENT_ICONS = [
+  "🏆",
+  "⭐",
+  "📚",
+  "🎯",
+  "🥇",
+  "🚀",
+  "💡",
+  "🔥",
+  "🎓",
+  "📜",
+];
 
 const MYPROJECTS = [
-  { icon:"🏆", bg:"bg-amber-500/10", name:"Smart Traffic Controller", meta:"HackBIT 2025 · 2 members", status:"Active", sc:"green" },
-  { icon:"💻", bg:"bg-blue-500/10", name:"AI Resume Screener", meta:"SIH 2025 · 4 members", status:"Full", sc:"amber" },
+  {
+    icon: "🏆",
+    bg: "bg-amber-500/10",
+    name: "Smart Traffic Controller",
+    meta: "HackBIT 2025 · 2 members",
+    status: "Active",
+    sc: "green",
+  },
+  {
+    icon: "💻",
+    bg: "bg-blue-500/10",
+    name: "AI Resume Screener",
+    meta: "SIH 2025 · 4 members",
+    status: "Full",
+    sc: "amber",
+  },
 ];
 
 const MYRESOURCES = [
-  { name:"DS Complete Notes", meta:"Sem 5 · 142 downloads" },
-  { name:"OS Unit 4 Notes", meta:"Sem 5 · 98 downloads" },
-  { name:"CN Lab Manual", meta:"Sem 5 · 64 downloads" },
+  {
+    name: "DS Complete Notes",
+    meta: "Sem 5 · 142 downloads",
+  },
+  {
+    name: "OS Unit 4 Notes",
+    meta: "Sem 5 · 98 downloads",
+  },
+  {
+    name: "CN Lab Manual",
+    meta: "Sem 5 · 64 downloads",
+  },
 ];
 
-const RESUME_ACCEPT = ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
-const RESUME_MAX_BYTES = 5 * 1024 * 1024;
-
-const formatSize = (bytes) => {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
-};
+const RESUME_ACCEPT =
+  ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 export default function Profile({ onNavigate }) {
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
+
   const fileInputRef = useRef(null);
   const resumeInputRef = useRef(null);
 
-  const user = JSON.parse(localStorage.getItem("user")) || {};
+  const [profile, setProfile] = useState(null);
+  const [draft, setDraft] = useState(null);
 
-const [profile, setProfile] = useState(null);
-const [draft, setDraft] = useState(null);
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const res = await getProfile();
 
-useEffect(() => {
-  const fetchProfile = async () => {
+        const user = res.data.data;
+
+        const profileData = {
+          name: user.name || "",
+          rollno: user.rollNumber || "",
+          programme: user.branch || "",
+          sem: user.semester || "",
+          batch: "",
+          bio: user.bio || "",
+          skills: user.skills || [],
+          photo: user.avatar || "",
+          resume: user.resumeUrl || "",
+          achievements: user.achievements || [],
+        };
+
+        setProfile(profileData);
+        setDraft(profileData);
+      } catch (err) {
+        console.error(err);
+      }
+    };
+
+    fetchProfile();
+  }, []);
+
+  const startEdit = () => {
+    setDraft(profile);
+    setEditing(true);
+    setSaved(false);
+  };
+
+  const cancelEdit = () => {
+    setDraft(profile);
+    setEditing(false);
+  };
+
+  const saveEdit = async () => {
     try {
-      const res = await getProfile();
+      const res = await updateProfile({
+        name: draft.name,
+        bio: draft.bio,
+        branch: draft.programme,
+        semester: draft.sem,
+        skills: draft.skills,
+        achievements: draft.achievements,
+      });
 
       const user = res.data.data;
 
-      const profileData = {
-        name: user.name || "",
-        rollno: user.rollNumber || "",
-        programme: user.branch || "B.Tech CSE",
-        sem: user.semester || "",
-        batch: "",
-        bio: user.bio || "",
-        skills: user.skills || [],
-        photo: user.avatar || null,
-        resume: user.resumeUrl || null,
-        achievements: user.achievements || [],
+      const updated = {
+        ...draft,
+        photo: user.avatar ?? draft.photo,
+        resume: user.resumeUrl ?? draft.resume,
       };
 
-      setProfile(profileData);
-      setDraft(profileData);
+      setProfile(updated);
+      setDraft(updated);
+
+      localStorage.setItem("user", JSON.stringify(user));
+
+      setEditing(false);
+      setSaved(true);
+
+      setTimeout(() => setSaved(false), 2500);
     } catch (err) {
       console.error(err);
+      alert(err.response?.data?.message || "Profile update failed");
     }
   };
 
-  fetchProfile();
-}, []);
-  
-
-  const startEdit = () => { setDraft(profile); setEditing(true); setSaved(false); };
-  const cancelEdit = () => { setDraft(profile); setEditing(false); };
-const saveEdit = async () => {
-   console.log("Save button clicked");
-  try {
-    console.log("Draft:", draft);
-    const res = await updateProfile({
-      name: draft.name,
-      bio: draft.bio,
-      branch: draft.programme,
-      semester: draft.sem,
-      skills: draft.skills,
-      achievements: draft.achievements,
-      
-    });
-console.log("Response Data:", res.data);
-console.log("User Data:", res.data.data);
-    const user = res.data.data;
-
-    const updatedProfile = {
-      ...draft,
-      photo: user.avatar,
-      resume: user.resumeUrl,
-    };
-console.log("Updated Profile:", updatedProfile);
-    setProfile(updatedProfile);
-    setDraft(updatedProfile);
-
-    localStorage.setItem("user", JSON.stringify(user));
-
-    setEditing(false);
-    console.log("editing set to false");
-    setSaved(true);
-
-    setTimeout(() => setSaved(false), 2500);
-  } catch (err) {
-    console.error(err);
-    alert(err.response?.data?.message || "Profile update failed");
-  }
-};
-
-  
-    
-
-  const handle = (e) => setDraft((d) => ({ ...d, [e.target.name]: e.target.value }));
+  const handle = (e) => {
+    setDraft((d) => ({
+      ...d,
+      [e.target.name]: e.target.value,
+    }));
+  };
 
   const toggleSkill = (skill) => {
     setDraft((d) => ({
       ...d,
-      skills: d.skills.includes(skill) ? d.skills.filter((s) => s !== skill) : [...d.skills, skill],
+      skills: d.skills.includes(skill)
+        ? d.skills.filter((s) => s !== skill)
+        : [...d.skills, skill],
     }));
   };
 
-  const handlePhotoUpload = (e) => {
+  const handlePhotoUpload = async (e) => {
     const file = e.target.files?.[0];
-    if (!file) return;
-    if (!file.type.startsWith("image/")) { alert("Please upload an image file."); return; }
-    if (file.size > 3 * 1024 * 1024) { alert("Image must be under 3MB."); return; }
-    const reader = new FileReader();
-    reader.onload = () => setDraft((d) => ({ ...d, photo: reader.result }));
-    reader.readAsDataURL(file);
-  };
 
-  const removePhoto = () => {
-    setDraft((d) => ({ ...d, photo: null }));
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
-
-  const handleResumeUpload = (e) => {
-    const file = e.target.files?.[0];
     if (!file) return;
-    const okType =
-      file.type === "application/pdf" ||
-      file.type === "application/msword" ||
-      file.type === "application/vnd.openxmlformats-officedocument.wordprocessingml.document" ||
-      /\.(pdf|docx?)$/i.test(file.name);
-    if (!okType) { alert("Please upload a PDF or Word document."); return; }
-    if (file.size > RESUME_MAX_BYTES) { alert("Resume must be under 5MB."); return; }
-    const reader = new FileReader();
-    reader.onload = () => {
+
+    if (!file.type.startsWith("image/")) {
+      alert("Please upload an image.");
+      return;
+    }
+
+    if (file.size > 3 * 1024 * 1024) {
+      alert("Image must be under 3MB.");
+      return;
+    }
+
+    try {
+      const formData = new FormData();
+      formData.append("avatar", file);
+
+      const res = await uploadAvatar(formData);
+
+      const user = res.data.data;
+
       setDraft((d) => ({
         ...d,
-        resume: {
-          name: file.name,
-          size: file.size,
-          type: file.type,
-          dataUrl: reader.result,
-          uploadedAt: new Date().toISOString(),
-        },
+        photo: user.avatar,
       }));
-    };
-    reader.readAsDataURL(file);
-  };
 
-  const removeResume = () => {
-    setDraft((d) => ({ ...d, resume: null }));
-    if (resumeInputRef.current) resumeInputRef.current.value = "";
-  };
-
-  const viewResume = (resume) => {
-    if (!resume?.dataUrl) return;
-    try {
-      const [meta, b64] = resume.dataUrl.split(",");
-      const mime = meta.match(/:(.*?);/)?.[1] || resume.type || "application/pdf";
-      const bin = atob(b64);
-      const bytes = new Uint8Array(bin.length);
-      for (let i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
-      const blob = new Blob([bytes], { type: mime });
-      const url = URL.createObjectURL(blob);
-      window.open(url, "_blank", "noopener,noreferrer");
-      setTimeout(() => URL.revokeObjectURL(url), 60_000);
-    } catch {
-      alert("Could not open the resume. Try downloading it instead.");
+      setProfile((p) => ({
+        ...p,
+        photo: user.avatar,
+      }));
+    } catch (err) {
+      console.error(err);
+      alert("Avatar upload failed");
     }
   };
 
-  const downloadResume = (resume) => {
-    if (!resume?.dataUrl) return;
+  const removePhoto = async () => {
+  try {
+    await removeAvatar();
+
+    setDraft((d) => ({
+      ...d,
+      photo: "",
+    }));
+
+    setProfile((p) => ({
+      ...p,
+      photo: "",
+    }));
+
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Failed to remove avatar");
+  }
+};
+
+  const handleResumeUpload = async (e) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    try {
+      const formData = new FormData();
+
+      formData.append("resume", file);
+
+      const res = await uploadResume(formData);
+
+      const user = res.data.data;
+
+      setDraft((d) => ({
+        ...d,
+        resume: user.resumeUrl,
+      }));
+
+      setProfile((p) => ({
+        ...p,
+        resume: user.resumeUrl,
+      }));
+    } catch (err) {
+      console.error(err);
+      alert("Resume upload failed");
+    }
+  };
+
+  const handleRemoveResume = async () => {
+  try {
+    await removeResume();
+
+    setDraft((d) => ({
+      ...d,
+      resume: "",
+    }));
+
+    setProfile((p) => ({
+      ...p,
+      resume: "",
+    }));
+
+    if (resumeInputRef.current) {
+      resumeInputRef.current.value = "";
+    }
+  } catch (err) {
+    console.error(err);
+    alert("Failed to remove resume");
+  }
+};
+
+  const viewResume = (url) => {
+    if (!url) return;
+    window.open(url, "_blank");
+  };
+
+  const downloadResume = (url) => {
+    if (!url) return;
+
     const a = document.createElement("a");
-    a.href = resume.dataUrl;
-    a.download = resume.name;
+    a.href = url;
+    a.target = "_blank";
     a.click();
   };
 
   const updateAchievement = (index, field, value) => {
     setDraft((d) => {
       const next = [...d.achievements];
-      next[index] = { ...next[index], [field]: value };
-      return { ...d, achievements: next };
+      next[index] = {
+        ...next[index],
+        [field]: value,
+      };
+
+      return {
+        ...d,
+        achievements: next,
+      };
     });
   };
-  const addAchievement = () => setDraft((d) => ({ ...d, achievements: [...d.achievements, { icon: "🏆", title: "", subtitle: "" }] }));
-  const removeAchievement = (index) => setDraft((d) => ({ ...d, achievements: d.achievements.filter((_, i) => i !== index) }));
-if (!profile || !draft) {
-  return (
-    <PageWrap>
-      <div className="text-center py-20 text-[#5a6a85]">
-        Loading profile...
-      </div>
-    </PageWrap>
-  );
-}
-  const initials = (editing ? draft.name : profile.name).split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase();
+
+  const addAchievement = () =>
+    setDraft((d) => ({
+      ...d,
+      achievements: [
+        ...d.achievements,
+        {
+          icon: "🏆",
+          title: "",
+          subtitle: "",
+        },
+      ],
+    }));
+
+  const removeAchievement = (index) =>
+    setDraft((d) => ({
+      ...d,
+      achievements: d.achievements.filter((_, i) => i !== index),
+    }));
+
+  if (!profile || !draft) {
+    return (
+      <PageWrap>
+        <div className="text-center py-20 text-[#5a6a85]">
+          Loading profile...
+        </div>
+      </PageWrap>
+    );
+  }
+
+  const initials = (editing ? draft.name : profile.name)
+    .split(" ")
+    .map((w) => w[0])
+    .join("")
+    .slice(0, 2)
+    .toUpperCase();
+
   const displayPhoto = editing ? draft.photo : profile.photo;
   const displayResume = editing ? draft.resume : profile.resume;
-
   return (
-    <PageWrap>
-      {saved && (
-        <div className="bg-green-50 border border-green-300 rounded-lg px-4 py-2.5 text-sm text-green-700 mb-3 flex items-center gap-2">
-          ✅ Profile updated successfully.
-        </div>
-      )}
+  <PageWrap>
+    {saved && (
+      <div className="bg-green-50 border border-green-300 rounded-lg px-4 py-2.5 text-sm text-green-700 mb-3 flex items-center gap-2">
+        ✅ Profile updated successfully.
+      </div>
+    )}
 
-      <div className="grid grid-cols-2 gap-3 items-start">
-        <div>
-          {/* Profile card */}
-          <div className="bg-[#f5efdc] border border-white/[0.07] rounded-xl overflow-hidden mb-3">
-            <div className="h-24 bg-gradient-to-br from-[#f1faf2] to-[#eef4fb] relative overflow-hidden">
-              <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 via-transparent to-blue-500/10" />
-              <div className="absolute right-3 top-3 opacity-20">
-                <img src={logo} alt="" className="w-14 h-14 object-cover rounded-full" />
-              </div>
-              <div className="absolute bottom-2 left-4 text-[10px] text-yellow-400/60 font-medium tracking-wider uppercase">
-                CUJ · CSE · Batch {editing ? draft.batch : profile.batch}
-              </div>
+    <div className="grid grid-cols-2 gap-3 items-start">
+      <div>
+
+        {/* Profile Card */}
+
+        <div className="bg-[#f5efdc] border border-white/[0.07] rounded-xl overflow-hidden mb-3">
+
+          <div className="h-24 bg-gradient-to-br from-[#f1faf2] to-[#eef4fb] relative overflow-hidden">
+
+            <div className="absolute inset-0 bg-gradient-to-r from-yellow-500/10 via-transparent to-blue-500/10" />
+
+            <div className="absolute right-3 top-3 opacity-20">
+              <img
+                src={logo}
+                alt=""
+                className="w-14 h-14 object-cover rounded-full"
+              />
             </div>
 
-            <div className="px-5 pb-5">
-              <div className="relative -mt-8 mb-2.5 w-16 h-16">
-                {displayPhoto ? (
-                  <img src={displayPhoto} alt="Profile" className="w-16 h-16 rounded-full object-cover border-[3px] border-[#f5efdc]" />
-                ) : (
-                  <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-violet-500 flex items-center justify-center text-xl font-bold text-white border-[3px] border-[#f5efdc]">
-                    {initials}
-                  </div>
-                )}
-                {editing && (
-                  <button
-                    type="button"
-                    onClick={() => fileInputRef.current?.click()}
-                    className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-blue-500 text-white text-[11px] flex items-center justify-center cursor-pointer border-2 border-[#f5efdc] hover:bg-blue-600 transition-colors"
-                    title="Change photo"
-                  >📷</button>
-                )}
-              </div>
+            <div className="absolute bottom-2 left-4 text-[10px] text-yellow-400/60 font-medium tracking-wider uppercase">
+              CUJ · CSE · Batch {editing ? draft.batch : profile.batch}
+            </div>
+
+          </div>
+
+          <div className="px-5 pb-5">
+
+            <div className="relative -mt-8 mb-2.5 w-16 h-16">
+
+              {displayPhoto ? (
+                <img
+                  src={displayPhoto}
+                  alt="Profile"
+                  className="w-16 h-16 rounded-full object-cover border-[3px] border-[#f5efdc]"
+                />
+              ) : (
+                <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-400 to-violet-500 flex items-center justify-center text-xl font-bold text-white border-[3px] border-[#f5efdc]">
+                  {initials}
+                </div>
+              )}
 
               {editing && (
-                <div className="flex gap-2 mb-3">
-                  <input ref={fileInputRef} type="file" accept="image/*" onChange={handlePhotoUpload} className="hidden" />
-                  <button type="button" onClick={() => fileInputRef.current?.click()} className="text-[11px] px-2.5 py-1 rounded-md bg-[#ece4c8] text-[#1a2540] border border-white/[0.07] hover:border-white/15 cursor-pointer transition-all">📤 Upload photo</button>
-                  {draft.photo && (
-                    <button type="button" onClick={removePhoto} className="text-[11px] px-2.5 py-1 rounded-md bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 cursor-pointer transition-all">🗑️ Remove</button>
-                  )}
-                </div>
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="absolute -bottom-1 -right-1 w-6 h-6 rounded-full bg-blue-500 text-white text-[11px] flex items-center justify-center border-2 border-[#f5efdc]"
+                >
+                  📷
+                </button>
               )}
 
-              {editing ? (
-                <input name="name" value={draft.name} onChange={handle} placeholder="Full name" className="w-full font-['Syne',sans-serif] text-lg font-bold bg-[#ece4c8] border border-white/[0.07] rounded-lg px-2.5 py-1.5 text-[#1a2540] outline-none focus:border-blue-500/50 mb-1.5" />
-              ) : (
-                <div className="font-['Syne',sans-serif] text-lg font-bold">{profile.name}</div>
-              )}
+            </div>
+
+            {editing && (
+              <div className="flex gap-2 mb-3">
+
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                />
+
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="text-[11px] px-2.5 py-1 rounded-md bg-[#ece4c8]"
+                >
+                  📤 Upload Photo
+                </button>
+
+                {draft.photo && (
+                  <button
+                    type="button"
+                    onClick={removePhoto}
+                    className="text-[11px] px-2.5 py-1 rounded-md bg-red-100 text-red-600"
+                  >
+                    Remove
+                  </button>
+                )}
+
+              </div>
+            )}
+
+            {editing ? (
+              <input
+                name="name"
+                value={draft.name}
+                onChange={handle}
+                className="w-full font-bold text-lg bg-[#ece4c8] rounded-lg px-3 py-2"
+              />
+            ) : (
+              <div className="font-bold text-lg">
+                {profile.name}
+              </div>
+            )}
+
+            {editing ? (
+              <div className="grid grid-cols-2 gap-2 mt-3">
+
+                <input
+                  name="rollno"
+                  value={draft.rollno}
+                  onChange={handle}
+                  placeholder="Roll Number"
+                  className="bg-[#ece4c8] rounded-lg px-3 py-2"
+                />
+
+                <select
+                  name="sem"
+                  value={draft.sem}
+                  onChange={handle}
+                  className="bg-[#ece4c8] rounded-lg px-3 py-2"
+                >
+                  {[1,2,3,4,5,6,7,8].map((s)=>(
+                    <option key={s}>{s}</option>
+                  ))}
+                </select>
+
+                <input
+                  name="programme"
+                  value={draft.programme}
+                  onChange={handle}
+                  placeholder="Programme"
+                  className="col-span-2 bg-[#ece4c8] rounded-lg px-3 py-2"
+                />
+
+                <input
+                  name="batch"
+                  value={draft.batch}
+                  onChange={handle}
+                  placeholder="Batch"
+                  className="col-span-2 bg-[#ece4c8] rounded-lg px-3 py-2"
+                />
+
+              </div>
+            ) : (
+              <>
+                <div className="text-sm text-[#5a6a85] mt-1">
+                  Roll No: {profile.rollno}
+                </div>
+
+                <div className="text-sm text-[#5a6a85]">
+                  {profile.programme} · Semester {profile.sem}
+                </div>
+              </>
+            )}
+
+            {editing ? (
+              <textarea
+                rows={3}
+                name="bio"
+                value={draft.bio}
+                onChange={handle}
+                className="mt-3 w-full bg-[#ece4c8] rounded-lg px-3 py-2"
+              />
+            ) : (
+              <div className="text-sm text-[#5a6a85] mt-2">
+                {profile.bio}
+              </div>
+            )}
+
+            <div className="flex gap-2 mt-3">
 
               {editing ? (
-                <div className="grid grid-cols-2 gap-2 mt-2">
-                  <div>
-                    <label className="text-[10px] text-[#5a6a85] mb-1 block">Roll number</label>
-                    <input name="rollno" value={draft.rollno} onChange={handle} className="w-full text-sm bg-[#ece4c8] border border-white/[0.07] rounded-lg px-2.5 py-1.5 text-[#1a2540] outline-none focus:border-blue-500/50" />
-                  </div>
-                  <div>
-                    <label className="text-[10px] text-[#5a6a85] mb-1 block">Semester</label>
-                    <select name="sem" value={draft.sem} onChange={handle} className="w-full text-sm bg-[#ece4c8] border border-white/[0.07] rounded-lg px-2.5 py-1.5 text-[#1a2540] outline-none focus:border-blue-500/50 cursor-pointer">
-                      {[1,2,3,4,5,6,7,8].map((s) => <option key={s} value={s}>{s}</option>)}
-                    </select>
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-[10px] text-[#5a6a85] mb-1 block">Programme</label>
-                    <input name="programme" value={draft.programme} onChange={handle} className="w-full text-sm bg-[#ece4c8] border border-white/[0.07] rounded-lg px-2.5 py-1.5 text-[#1a2540] outline-none focus:border-blue-500/50" />
-                  </div>
-                  <div className="col-span-2">
-                    <label className="text-[10px] text-[#5a6a85] mb-1 block">Batch</label>
-                    <input name="batch" value={draft.batch} onChange={handle} placeholder="2022–26" className="w-full text-sm bg-[#ece4c8] border border-white/[0.07] rounded-lg px-2.5 py-1.5 text-[#1a2540] outline-none focus:border-blue-500/50" />
-                  </div>
-                </div>
+                <>
+                  <Btn size="sm" onClick={saveEdit}>
+                    💾 Save
+                  </Btn>
+
+                  <Btn
+                    variant="ghost"
+                    size="sm"
+                    onClick={cancelEdit}
+                  >
+                    Cancel
+                  </Btn>
+                </>
               ) : (
                 <>
-                  <div className="text-sm text-[#5a6a85] mt-0.5">Roll No: {profile.rollno}</div>
-                  <div className="text-sm text-[#5a6a85] mt-0.5">{profile.programme} · Semester {profile.sem}</div>
+                  <Btn
+                    size="sm"
+                    onClick={() => onNavigate("messages")}
+                  >
+                    💌 Message
+                  </Btn>
+
+                  <Btn variant="ghost" size="sm">
+                    🔗 Share
+                  </Btn>
+
+                  <Btn
+                    variant="ghost"
+                    size="sm"
+                    onClick={startEdit}
+                  >
+                    ✏️ Edit
+                  </Btn>
                 </>
               )}
 
-              {editing ? (
-                <div className="mt-2">
-                  <label className="text-[10px] text-[#5a6a85] mb-1 block">Bio</label>
-                  <textarea name="bio" value={draft.bio} onChange={handle} rows={3} className="w-full text-sm bg-[#ece4c8] border border-white/[0.07] rounded-lg px-2.5 py-1.5 text-[#1a2540] outline-none focus:border-blue-500/50 resize-none" />
+            </div>
+
+          </div>
+        </div>
+
+        {/* Resume */}
+
+        <Card className="mb-3">
+
+          <SectionTitle>
+            Resume
+          </SectionTitle>
+
+          <input
+            ref={resumeInputRef}
+            type="file"
+            accept={RESUME_ACCEPT}
+            onChange={handleResumeUpload}
+            className="hidden"
+          />
+
+          {displayResume ? (
+
+            <div className="flex items-center gap-3 bg-[#ece4c8] rounded-lg p-3">
+
+              <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                📄
+              </div>
+
+              <div className="flex-1">
+
+                <div className="font-medium">
+                  Resume Uploaded
                 </div>
-              ) : (
-                <div className="text-sm text-[#5a6a85] mt-1.5 leading-relaxed">{profile.bio}</div>
+
+                <div className="text-xs text-[#5a6a85]">
+                  Stored securely on Cloudinary
+                </div>
+
+              </div>
+
+              <button
+                onClick={() => viewResume(displayResume)}
+                className="px-3 py-1 bg-blue-500 text-white rounded"
+              >
+                View
+              </button>
+
+              <button
+                onClick={() => downloadResume(displayResume)}
+                className="px-3 py-1 border rounded"
+              >
+                Download
+              </button>
+
+              {editing && (
+                <>
+                  <button
+                    onClick={() => resumeInputRef.current?.click()}
+                    className="px-3 py-1 border rounded"
+                  >
+                    Replace
+                  </button>
+
+                  <button
+                    onClick={handleRemoveResume}
+                    className="px-3 py-1 bg-red-100 rounded"
+                  >
+                    Remove
+                  </button>
+                </>
               )}
 
-              <div className="flex gap-2 mt-3 flex-wrap">
-                {editing ? (
-                  <>
-                    <Btn
-  size="sm"
-  onClick={() => {
-    console.log("Save button clicked");
-    saveEdit();
-  }}
->
-  💾 Save
-</Btn>
-                    <Btn variant="ghost" size="sm" onClick={cancelEdit}>Cancel</Btn>
-                  </>
-                ) : (
-                  <>
-                    <Btn size="sm" onClick={() => onNavigate("messages")}>💌 Message</Btn>
-                    <Btn variant="ghost" size="sm">🔗 Share</Btn>
-                    <Btn variant="ghost" size="sm" onClick={startEdit}>✏️ Edit</Btn>
-                  </>
-                )}
-              </div>
             </div>
+
+          ) : (
+
+            <div className="flex justify-between items-center bg-[#ece4c8] rounded-lg p-3">
+
+              <div>
+
+                <div className="font-medium">
+                  No Resume Uploaded
+                </div>
+
+                <div className="text-xs text-[#5a6a85]">
+                  PDF / DOC / DOCX
+                </div>
+
+              </div>
+
+              <button
+                onClick={() => resumeInputRef.current?.click()}
+                className="bg-blue-500 text-white px-3 py-2 rounded"
+              >
+                Upload Resume
+              </button>
+
+            </div>
+
+          )}
+
+        </Card>
+
+        {/* Skills starts here */}
+                {/* Skills */}
+
+        <Card className="mb-3">
+          <SectionTitle>Skills</SectionTitle>
+
+          {editing ? (
+            <>
+              <div className="flex flex-wrap gap-2">
+
+                {ALL_SKILLS.map((skill) => (
+                  <button
+                    key={skill}
+                    type="button"
+                    onClick={() => toggleSkill(skill)}
+                    className={`px-3 py-1 rounded-md text-xs border transition ${
+                      draft.skills.includes(skill)
+                        ? "bg-blue-500 text-white border-blue-500"
+                        : "bg-[#ece4c8] border-gray-300"
+                    }`}
+                  >
+                    {skill}
+                  </button>
+                ))}
+
+              </div>
+
+              <p className="text-xs text-[#5a6a85] mt-2">
+                Click to add or remove skills.
+              </p>
+            </>
+          ) : (
+            <>
+              <div className="flex flex-wrap gap-2">
+
+                {profile.skills.length === 0 ? (
+                  <p className="text-sm text-[#5a6a85]">
+                    No skills added.
+                  </p>
+                ) : (
+                  profile.skills.map((skill) => (
+                    <button
+                      key={skill}
+                      onClick={() => onNavigate("projects")}
+                      className="px-3 py-1 rounded-md bg-[#ece4c8] text-xs border"
+                    >
+                      {skill}
+                    </button>
+                  ))
+                )}
+
+              </div>
+
+              <p className="text-xs text-[#5a6a85] mt-2">
+                Click a skill to browse projects.
+              </p>
+            </>
+          )}
+        </Card>
+
+        {/* Achievements */}
+
+        <Card>
+
+          <div className="flex justify-between items-center mb-3">
+
+            <SectionTitle>
+              Achievements
+            </SectionTitle>
+
+            {editing && (
+              <button
+                onClick={addAchievement}
+                className="bg-blue-500 text-white px-3 py-1 rounded text-xs"
+              >
+                + Add
+              </button>
+            )}
+
           </div>
 
-          {/* Resume */}
-          <Card className="mb-3">
-            <SectionTitle>Resume</SectionTitle>
-            <input
-              ref={resumeInputRef}
-              type="file"
-              accept={RESUME_ACCEPT}
-              onChange={handleResumeUpload}
-              className="hidden"
-            />
+          {editing ? (
 
-            {displayResume ? (
-              <div className="flex items-center gap-3 bg-[#ece4c8] rounded-lg p-2.5">
-                <div className="w-9 h-9 rounded-lg bg-red-500/10 flex items-center justify-center text-red-500 text-base shrink-0">📄</div>
-                <div className="flex-1 min-w-0">
-                  <div className="text-sm font-medium truncate">{displayResume.name}</div>
-                  <div className="text-[11px] text-[#5a6a85] mt-0.5">
-                    {formatSize(displayResume.size)} · Uploaded {new Date(displayResume.uploadedAt).toLocaleDateString()}
-                  </div>
-                </div>
-                <div className="flex gap-1.5 shrink-0 flex-wrap justify-end">
-                  <button
-                    type="button"
-                    onClick={() => viewResume(displayResume)}
-                    className="text-[11px] px-2.5 py-1 rounded-md bg-blue-500 text-white hover:bg-blue-600 cursor-pointer transition-all"
-                    title="View resume"
-                  >
-                    👁️ View
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => downloadResume(displayResume)}
-                    className="text-[11px] px-2.5 py-1 rounded-md bg-[#f5efdc] border border-white/[0.07] hover:border-white/15 cursor-pointer transition-all"
-                    title="Download"
-                  >
-                    ⬇️ Download
-                  </button>
-                  {editing && (
-                    <>
-                      <button
-                        type="button"
-                        onClick={() => resumeInputRef.current?.click()}
-                        className="text-[11px] px-2.5 py-1 rounded-md bg-[#ece4c8] border border-white/[0.07] hover:border-white/15 cursor-pointer transition-all"
-                        title="Replace"
-                      >
-                        🔄 Replace
-                      </button>
-                      <button
-                        type="button"
-                        onClick={removeResume}
-                        className="text-[11px] px-2.5 py-1 rounded-md bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 cursor-pointer transition-all"
-                        title="Remove"
-                      >
-                        🗑️
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="flex items-center justify-between gap-3 bg-[#ece4c8] rounded-lg p-3">
-                <div>
-                  <div className="text-sm font-medium">No resume uploaded</div>
-                  <div className="text-[11px] text-[#5a6a85] mt-0.5">PDF, DOC, or DOCX · max 5MB</div>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => resumeInputRef.current?.click()}
-                  className="text-[11px] px-3 py-1.5 rounded-md bg-blue-500 text-white hover:bg-blue-600 cursor-pointer transition-all shrink-0"
+            <div className="space-y-3">
+
+              {draft.achievements.map((a, index) => (
+
+                <div
+                  key={index}
+                  className="bg-[#ece4c8] rounded-lg p-3 flex gap-2 items-center"
                 >
-                  📤 Upload resume
-                </button>
-              </div>
-            )}
-            {editing && displayResume && (
-              <p className="text-[11px] text-[#5a6a85] mt-2">Changes apply after you hit Save above.</p>
-            )}
-          </Card>
 
-          {/* Skills */}
-          <Card className="mb-3">
-            <SectionTitle>Skills</SectionTitle>
-            {editing ? (
-              <>
-                <div className="-mt-1 flex flex-wrap gap-1">
-                  {ALL_SKILLS.map((s) => (
-                    <button key={s} type="button" onClick={() => toggleSkill(s)} className={`inline-block text-[11px] px-2.5 py-1 rounded-md border transition-all cursor-pointer ${draft.skills.includes(s) ? "bg-blue-500 text-white border-blue-500" : "bg-[#ece4c8] border-white/[0.07] text-[#5a6a85] hover:border-white/15 hover:text-[#1a2540]"}`}>{s}</button>
-                  ))}
-                </div>
-                <p className="text-[11px] text-[#5a6a85] mt-2">Click to toggle. Don't forget to hit Save above.</p>
-              </>
-            ) : (
-              <>
-                <div className="-mt-1">
-                  {profile.skills.map((s) => (
-                    <button key={s} onClick={() => onNavigate("projects")} className="inline-block text-[11px] px-2.5 py-1 rounded-md bg-[#ece4c8] border border-white/[0.07] text-[#5a6a85] m-0.5 hover:border-white/15 hover:text-[#1a2540] transition-all cursor-pointer">{s}</button>
-                  ))}
-                </div>
-                <p className="text-[11px] text-[#5a6a85] mt-2">Click a skill to find open projects needing it ↗️</p>
-              </>
-            )}
-          </Card>
+                  <select
+                    value={a.icon}
+                    onChange={(e) =>
+                      updateAchievement(index, "icon", e.target.value)
+                    }
+                    className="text-xl bg-transparent"
+                  >
+                    {ACHIEVEMENT_ICONS.map((icon) => (
+                      <option
+                        key={icon}
+                        value={icon}
+                      >
+                        {icon}
+                      </option>
+                    ))}
+                  </select>
 
-          {/* Achievements */}
-          <Card>
-            <div className="flex items-center justify-between mb-1">
-              <SectionTitle>Achievements</SectionTitle>
-              {editing && (
-                <button type="button" onClick={addAchievement} className="text-[11px] px-2 py-1 rounded-md bg-blue-500 text-white cursor-pointer hover:bg-blue-600 transition-colors -mt-3">+ Add</button>
+                  <input
+                    value={a.title}
+                    onChange={(e) =>
+                      updateAchievement(index, "title", e.target.value)
+                    }
+                    placeholder="Title"
+                    className="flex-1 px-2 py-1 rounded border"
+                  />
+
+                  <input
+                    value={a.subtitle}
+                    onChange={(e) =>
+                      updateAchievement(index, "subtitle", e.target.value)
+                    }
+                    placeholder="Subtitle"
+                    className="flex-1 px-2 py-1 rounded border"
+                  />
+
+                  <button
+                    onClick={() => removeAchievement(index)}
+                    className="text-red-500"
+                  >
+                    ✕
+                  </button>
+
+                </div>
+
+              ))}
+
+              {draft.achievements.length === 0 && (
+                <div className="text-center text-sm text-[#5a6a85] py-4">
+                  No achievements added.
+                </div>
               )}
+
             </div>
-            {editing ? (
-              <div className="flex flex-col gap-2">
-                {draft.achievements.map((a, i) => (
-                  <div key={i} className="flex items-center gap-2 bg-[#ece4c8] rounded-lg p-2">
-                    <select value={a.icon} onChange={(e) => updateAchievement(i, "icon", e.target.value)} className="text-lg bg-transparent outline-none cursor-pointer w-10">
-                      {ACHIEVEMENT_ICONS.map((ic) => <option key={ic} value={ic}>{ic}</option>)}
-                    </select>
-                    <input value={a.title} onChange={(e) => updateAchievement(i, "title", e.target.value)} placeholder="Title" className="flex-1 text-xs bg-[#f5efdc] border border-white/[0.07] rounded-md px-2 py-1.5 text-[#1a2540] outline-none focus:border-blue-500/50" />
-                    <input value={a.subtitle} onChange={(e) => updateAchievement(i, "subtitle", e.target.value)} placeholder="Subtitle" className="flex-1 text-xs bg-[#f5efdc] border border-white/[0.07] rounded-md px-2 py-1.5 text-[#1a2540] outline-none focus:border-blue-500/50" />
-                    <button type="button" onClick={() => removeAchievement(i)} className="text-red-500 hover:text-red-700 cursor-pointer text-sm shrink-0" title="Remove">✕</button>
-                  </div>
-                ))}
-                {draft.achievements.length === 0 && (
-                  <p className="text-[11px] text-[#5a6a85] text-center py-2">No achievements yet — click + Add above.</p>
-                )}
-              </div>
-            ) : (
-              <div className="flex gap-2 flex-wrap">
-                {profile.achievements.map((a, i) => (
-                  <div key={i} className="flex-1 min-w-[80px] text-center p-2.5 bg-[#ece4c8] rounded-xl">
-                    <div className="text-2xl">{a.icon}</div>
-                    <div className="text-[11px] text-[#5a6a85] mt-1 leading-snug">
-                      {a.title}<br />{a.subtitle}
+
+          ) : (
+
+            <div className="flex flex-wrap gap-3">
+
+              {profile.achievements.length === 0 ? (
+
+                <div className="w-full text-center py-4 text-[#5a6a85]">
+                  No achievements yet.
+                </div>
+
+              ) : (
+
+                profile.achievements.map((a, index) => (
+
+                  <div
+                    key={index}
+                    className="flex-1 min-w-[100px] bg-[#ece4c8] rounded-xl p-3 text-center"
+                  >
+
+                    <div className="text-3xl">
+                      {a.icon}
                     </div>
-                  </div>
-                ))}
-                {profile.achievements.length === 0 && (
-                  <p className="text-[11px] text-[#5a6a85] w-full text-center py-2">No achievements added yet.</p>
-                )}
-              </div>
-            )}
-          </Card>
-        </div>
 
-        <div>
-          <Card className="mb-3">
-            <SectionTitle>My projects</SectionTitle>
-            {MYPROJECTS.map((p, i) => (
-              <div key={i} className="flex items-center gap-3 py-2.5 border-b border-white/[0.07] last:border-0">
-                <div className={`w-8 h-8 rounded-lg flex items-center justify-center text-base ${p.bg} shrink-0`}>{p.icon}</div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium">{p.name}</div>
-                  <div className="text-[11px] text-[#5a6a85] mt-0.5 flex items-center gap-1.5">
-                    {p.meta} · <Pill color={p.sc} className="text-[10px]">{p.status}</Pill>
-                  </div>
-                </div>
-                <Btn variant="ghost" size="sm" onClick={() => onNavigate("projects")}>View ↗️</Btn>
-              </div>
-            ))}
-          </Card>
+                    <div className="font-medium mt-2">
+                      {a.title}
+                    </div>
 
-          <Card>
-            <SectionTitle>Uploaded resources</SectionTitle>
-            {MYRESOURCES.map((r, i) => (
-              <div key={i} className="flex items-center gap-3 py-2.5 border-b border-white/[0.07] last:border-0">
-                <div className="w-8 h-8 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 shrink-0">📄</div>
-                <div className="flex-1">
-                  <div className="text-sm font-medium">{r.name}</div>
-                  <div className="text-[11px] text-[#5a6a85] mt-0.5">{r.meta}</div>
-                </div>
-              </div>
-            ))}
-          </Card>
-        </div>
+                    <div className="text-xs text-[#5a6a85]">
+                      {a.subtitle}
+                    </div>
+
+                  </div>
+
+                ))
+
+              )}
+
+            </div>
+
+          )}
+
+        </Card>
+
       </div>
-    </PageWrap>
-  );
+
+      {/* Right Column starts here */}
+
+<div>
+
+  <Card className="mb-3">
+          <SectionTitle>My Projects</SectionTitle>
+
+          {MYPROJECTS.map((project, index) => (
+            <div
+              key={index}
+              className="flex items-center gap-3 py-3 border-b border-white/10 last:border-0"
+            >
+              <div
+                className={`w-10 h-10 rounded-lg flex items-center justify-center ${project.bg}`}
+              >
+                {project.icon}
+              </div>
+
+              <div className="flex-1">
+                <div className="font-medium">
+                  {project.name}
+                </div>
+
+                <div className="text-xs text-[#5a6a85] flex items-center gap-2 mt-1">
+                  {project.meta}
+
+                  <Pill color={project.sc}>
+                    {project.status}
+                  </Pill>
+                </div>
+              </div>
+
+              <Btn
+                variant="ghost"
+                size="sm"
+                onClick={() => onNavigate("projects")}
+              >
+                View ↗️
+              </Btn>
+            </div>
+          ))}
+        </Card>
+
+        <Card>
+
+          <SectionTitle>
+            Uploaded Resources
+          </SectionTitle>
+
+          {MYRESOURCES.map((resource, index) => (
+
+            <div
+              key={index}
+              className="flex items-center gap-3 py-3 border-b border-white/10 last:border-0"
+            >
+
+              <div className="w-10 h-10 rounded-lg bg-red-100 flex items-center justify-center">
+                📄
+              </div>
+
+              <div className="flex-1">
+
+                <div className="font-medium">
+                  {resource.name}
+                </div>
+
+                <div className="text-xs text-[#5a6a85]">
+                  {resource.meta}
+                </div>
+
+              </div>
+
+            </div>
+
+          ))}
+
+        </Card>
+
+      </div>
+
+    </div>
+
+  </PageWrap>
+);
 }
