@@ -1,20 +1,5 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, Pill, Btn, SectionTitle, StatCard, TabBar, PageWrap } from "../ui";
-
-const PENDING = [
-  { title: "DBMS Complete Notes Unit 5", by: "Rahul K.", subject: "DBMS", subjectColor: "purple", type: "Notes", date: "Today" },
-  { title: "ML Lab Manual — All 12 Experiments", by: "Sneha M.", subject: "ML", subjectColor: "teal", type: "Lab", date: "Today" },
-  { title: "OS Mid Sem 2023 Question Paper", by: "Arjun J.", subject: "OS", subjectColor: "green", type: "PYQ", date: "Yesterday" },
-];
-
-const STUDENTS = [
-  { name: "Aryan Kumar", rollno: "23CUCSE001", sem: "5", resume: { fileName: "Aryan_Kumar_Resume.pdf", uploaded: "12 Jul 2026", size: "412 KB" } },
-  { name: "Rahul Kumar", rollno: "23CUCSE014", sem: "5", resume: { fileName: "Rahul_K_CV.pdf", uploaded: "08 Jul 2026", size: "380 KB" } },
-  { name: "Sneha Mehta", rollno: "23CUCSE022", sem: "5", resume: { fileName: "Sneha_Mehta_Resume.docx", uploaded: "02 Jul 2026", size: "290 KB" } },
-  { name: "Arjun Jha", rollno: "23CUCSE009", sem: "5", resume: null },
-  { name: "Priya Das", rollno: "23CUCSE031", sem: "5", resume: { fileName: "Priya_Das_Resume.pdf", uploaded: "15 Jun 2026", size: "455 KB" } },
-  { name: "Nikhil Kujur", rollno: "22CUCSE045", sem: "7", resume: null },
-];
 
 const UPLOAD_BARS = [40, 55, 35, 80, 65, 90, 70];
 const DAYS = ["M","T","W","T","F","S","S"];
@@ -24,22 +9,37 @@ const SUBJECTS = ["DS","OS","DBMS","CN","ML"];
 function ResumeSection() {
   const [query, setQuery] = useState("");
   const [semFilter, setSemFilter] = useState("All");
+  const [students, setStudents] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch students from backend on mount
+  useEffect(() => {
+    fetch("http://localhost:5000/api/admin/students")
+      .then((res) => res.json())
+      .then((data) => {
+        setStudents(data);
+        setLoading(false);
+      })
+      .catch((err) => console.error("Error fetching students:", err));
+  }, []);
 
   const sems = ["All", ...Array.from({ length: 10 }, (_, i) => String(i + 1))];
 
-  const filtered = STUDENTS.filter((s) => {
+  const filtered = students.filter((s) => {
     const q = query.trim().toLowerCase();
     const matchesQuery = !q || s.name.toLowerCase().includes(q) || s.rollno.toLowerCase().includes(q);
     const matchesSem = semFilter === "All" || s.sem === semFilter;
     return matchesQuery && matchesSem;
   });
 
-  const uploadedCount = STUDENTS.filter((s) => s.resume).length;
+  const uploadedCount = students.filter((s) => s.resume).length;
+
+  if (loading) return <Card><div className="py-6 text-center text-sm text-[#5a6a85]">Loading students...</div></Card>;
 
   return (
     <Card>
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <SectionTitle>Student resumes ({uploadedCount}/{STUDENTS.length} uploaded)</SectionTitle>
+        <SectionTitle>Student resumes ({uploadedCount}/{students.length} uploaded)</SectionTitle>
         <div className="flex gap-2">
           <input
             value={query}
@@ -81,12 +81,12 @@ function ResumeSection() {
               <td className="py-2.5 px-2">
                 {s.resume ? (
                   <div className="flex gap-1.5">
-                    <button className="text-xs px-2.5 py-1 rounded-lg border border-blue-400/30 text-blue-500 bg-transparent hover:bg-blue-500/10 transition-colors cursor-pointer">
+                    <a href={`http://localhost:5000/api/admin/resume/preview/${s.rollno}`} target="_blank" rel="noreferrer" className="text-xs px-2.5 py-1 rounded-lg border border-blue-400/30 text-blue-500 bg-transparent hover:bg-blue-500/10 transition-colors cursor-pointer">
                       👁️ Preview
-                    </button>
-                    <button className="text-xs px-2.5 py-1 rounded-lg border border-emerald-500/30 text-emerald-500 bg-transparent hover:bg-emerald-500/10 transition-colors cursor-pointer">
+                    </a>
+                    <a href={`http://localhost:5000/api/admin/resume/download/${s.rollno}`} className="text-xs px-2.5 py-1 rounded-lg border border-emerald-500/30 text-emerald-500 bg-transparent hover:bg-emerald-500/10 transition-colors cursor-pointer">
                       ⬇️ Download
-                    </button>
+                    </a>
                   </div>
                 ) : (
                   <span className="text-xs text-[#5a6a85]">—</span>
@@ -105,7 +105,33 @@ function ResumeSection() {
 
 export default function Admin() {
   const [tab, setTab] = useState("Resources (8)");
-  const [dismissed, setDismissed] = useState({});
+  const [pending, setPending] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Fetch pending approvals on mount
+  useEffect(() => {
+    fetch("http://localhost:5000/api/admin/pending")
+      .then((res) => res.json())
+      .then((data) => {
+        setPending(data);
+        setLoading(false);
+      })
+      .catch((err) => console.error("Error fetching pending items:", err));
+  }, []);
+
+  const handleAction = async (id, action) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/admin/pending/${id}/${action}`, {
+        method: "POST",
+      });
+      if (res.ok) {
+        // Remove item from state list once approved/rejected
+        setPending((prev) => prev.filter((item) => item.id !== id));
+      }
+    } catch (err) {
+      console.error(`Failed to ${action} item:`, err);
+    }
+  };
 
   return (
     <PageWrap title="Admin Dashboard" subtitle="Moderate content, manage users, view analytics">
@@ -161,8 +187,8 @@ export default function Admin() {
             </tr>
           </thead>
           <tbody>
-            {PENDING.filter((_, i) => !dismissed[i]).map((row, i) => (
-              <tr key={i} className="border-b border-black/10 last:border-0 hover:bg-white/3 transition-colors">
+            {!loading && pending.map((row) => (
+              <tr key={row.id} className="border-b border-black/10 last:border-0 hover:bg-white/3 transition-colors">
                 <td className="py-2.5 px-2 pl-0 text-sm text-[#1a2540]">{row.title}</td>
                 <td className="py-2.5 px-2 text-sm text-[#5a6a85]">{row.by}</td>
                 <td className="py-2.5 px-2"><Pill color={row.subjectColor} className="text-[10px]">{row.subject}</Pill></td>
@@ -171,13 +197,13 @@ export default function Admin() {
                 <td className="py-2.5 px-2">
                   <div className="flex gap-1.5">
                     <button
-                      onClick={() => setDismissed((d) => ({ ...d, [i]: true }))}
+                      onClick={() => handleAction(row.id, "approve")}
                       className="text-xs px-2.5 py-1 rounded-lg border border-emerald-500/30 text-emerald-400 bg-transparent hover:bg-emerald-500/10 transition-colors cursor-pointer"
                     >
                       ✓ Approve
                     </button>
                     <button
-                      onClick={() => setDismissed((d) => ({ ...d, [i]: true }))}
+                      onClick={() => handleAction(row.id, "reject")}
                       className="text-xs px-2.5 py-1 rounded-lg border border-red-500/30 text-red-400 bg-transparent hover:bg-red-500/10 transition-colors cursor-pointer"
                     >
                       ✕ Reject
@@ -186,7 +212,10 @@ export default function Admin() {
                 </td>
               </tr>
             ))}
-            {Object.keys(dismissed).length === PENDING.length && (
+            {loading && (
+              <tr><td colSpan={6} className="py-6 text-center text-sm text-[#5a6a85]">Loading pending approvals...</td></tr>
+            )}
+            {!loading && pending.length === 0 && (
               <tr><td colSpan={6} className="py-6 text-center text-sm text-[#5a6a85]">All caught up! No pending approvals.</td></tr>
             )}
           </tbody>
