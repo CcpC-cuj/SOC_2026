@@ -43,7 +43,7 @@ const deleteResume = asyncHandler(async(req, res)=>{
 });
 
 const deleteAvatar = asyncHandler(async(req, res)=>{
-    const user = await profileService.deleteResume(req.user._id);
+    const user = await profileService.deleteAvatar(req.user._id);
 
     res.status(200).json(new ApiResponse(200, "Profile picture deleted", user));
 });
