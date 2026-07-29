@@ -29,3 +29,10 @@ export const uploadResume = (formData) => {
     },
   });
 };
+export const removeAvatar = () => {
+  return API.patch("/profile/deleteAvatar");
+};
+
+export const removeResume = () => {
+  return API.patch("/profile/deleteResume");
+};
