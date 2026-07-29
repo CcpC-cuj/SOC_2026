@@ -11,6 +11,7 @@ const upload = require("../../middleware/upload.middleware");
 router.get("/me",authMiddleware, profileController.getMyProfile);
 
 router.patch("/", authMiddleware, validate(updateProfileSchema), profileController.updateProfile);
+router.patch("/deleteResume", authMiddleware, profileController.deleteResume);
 router.patch("/resume", authMiddleware, upload.single("resume"), profileController.uploadResume);
 router.patch("/avatar", authMiddleware, upload.single("avatar"), profileController.uploadAvatar);
 

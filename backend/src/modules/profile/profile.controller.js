@@ -36,9 +36,17 @@ const uploadAvatar = asyncHandler(async(req, res)=>{
 
 });
 
+const deleteResume = asyncHandler(async(req, res)=>{
+    const user = await profileService.deleteResume(req.user._id);
+
+    res.status(200).json(new ApiResponse(200, "Resume deleted", user));
+});
+
+
 module.exports ={
     getMyProfile,
     updateProfile,
     uploadResume,
-    uploadAvatar
+    uploadAvatar,
+    deleteResume
 }
