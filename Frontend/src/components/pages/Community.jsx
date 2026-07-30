@@ -1,12 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Pill, Btn, FilterChips, PageWrap, Avatar } from "../ui";
-
-const THREADS = [
-  { id: 1, tag: "Doubt", tagColor: "blue", subject: "OS", title: "Difference between process and thread in OS?", votes: 47, replies: 12, time: "2h ago" },
-  { id: 2, tag: "Hackathon", tagColor: "amber", title: "SIH 2025 open — forming 6-member team, need ML + backend dev", votes: 28, replies: 8, time: "5h ago" },
-  { id: 3, tag: "Doubt", tagColor: "purple", subject: "DBMS", title: "Can someone explain 3NF vs BCNF with example?", votes: 19, replies: 6, time: "1d ago" },
-  { id: 4, tag: "Mentorship", tagColor: "green", title: "Looking for seniors who cleared GATE — need guidance on preparation", votes: 15, replies: 4, time: "2d ago" },
-];
+import {
+    getAllPosts,
+    toggleUpvote,
+    toggleDownvote,
+} from "../../api/community";
 
 const COMMENTS = [
   { initials: "RK", colorIndex: 0, name: "Rahul Kumar", sem: "Sem 6", text: "A process is an independent program in execution with its own memory space. A thread is the smallest unit of execution within a process, sharing the process's memory. Multiple threads communicate faster than inter-process communication.", votes: 31 },
@@ -14,8 +12,55 @@ const COMMENTS = [
 ];
 
 export default function Community({ onNavigate }) {
-  const [activeThread, setActiveThread] = useState(THREADS[0]);
+  const [posts, setPosts] = useState([]);
+  const [activeThread, setActiveThread] = useState(null);
+  const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
+
+  useEffect(() => {
+
+    const fetchPosts = async () => {
+
+        try {
+
+            const data = await getAllPosts();
+
+            setPosts(data.posts);
+
+            if (data.posts.length > 0) {
+                setActiveThread(data.posts[0]);
+            }
+
+        } catch (err) {
+
+            console.error(err);
+
+        } finally {
+
+            setLoading(false);
+
+        }
+
+    };
+
+    fetchPosts();
+  }, []);
+
+  if (loading) {
+        return (
+            <PageWrap title="Community">
+                Loading...
+            </PageWrap>
+        );
+    }
+
+    if (!activeThread) {
+        return (
+            <PageWrap title="Community">
+                No posts found.
+            </PageWrap>
+        );
+    }
 
   return (
     <PageWrap
@@ -30,12 +75,12 @@ export default function Community({ onNavigate }) {
       <div className="grid gap-3" style={{ gridTemplateColumns: "340px 1fr" }}>
         {/* Thread list */}
         <div>
-          {THREADS.map((t) => (
+          {posts.map((t) => (
             <button
-              key={t.id}
+              key={t._id}
               onClick={() => setActiveThread(t)}
               className={`w-full text-left p-3 rounded-xl mb-1.5 border transition-all duration-150 cursor-pointer
-                ${activeThread.id === t.id
+                ${activeThread?._id === t._id
                   ? "border-blue-500/40 bg-blue-500/5"
                   : "border-black/10 bg-[#f5efdc] hover:border-white/15"
                 }`}
@@ -44,11 +89,44 @@ export default function Community({ onNavigate }) {
                 <Pill color={t.tagColor}>{t.tag}</Pill>
                 {t.subject && <Pill color="gray">{t.subject}</Pill>}
               </div>
-              <div className="text-sm font-medium leading-snug mb-1.5">{t.title}</div>
+              <div className="flex items-center gap-2 mb-2">
+
+    <Avatar
+        src={t.author?.avatar}
+        initials={t.author?.name
+            ?.split(" ")
+            .map(word => word[0])
+            .join("")}
+    />
+
+    <div>
+
+        <div className="text-sm font-medium">
+            {t.author?.name}
+        </div>
+
+        <div className="text-[11px] text-[#5a6a85]">
+            {new Date(t.createdAt).toLocaleDateString()}
+        </div>
+
+    </div>
+
+</div>
+
+<div className="text-sm font-medium leading-snug mb-1">
+    {t.title}
+</div>
+
+              <p className="text-xs text-[#5a6a85] line-clamp-2 mb-2">
+                {t.content}
+              </p>
+
               <div className="flex items-center gap-2 text-[11px] text-[#5a6a85]">
-                <span>↑ {t.votes}</span>
-                <span>{t.replies} replies</span>
-                <span>{t.time}</span>
+                <span>👍 {t.upvotes.length}</span>
+
+                <span>👎 {t.downvotes.length}</span>
+
+                <span>{new Date(t.createdAt).toLocaleDateString()}</span>
               </div>
             </button>
           ))}
@@ -64,7 +142,14 @@ export default function Community({ onNavigate }) {
                 {activeThread.subject && <Pill color="gray">{activeThread.subject} · Sem 5</Pill>}
               </div>
               <h2 className="font-['Syne',sans-serif] text-base font-semibold leading-snug">{activeThread.title}</h2>
-              <p className="text-xs text-[#5a6a85] mt-1.5">Asked by Aryan K. · {activeThread.time}</p>
+              <p className="text-xs text-[#5a6a85] mt-1.5">
+                Posted by {activeThread?.author?.name}
+              </p>
+
+              <p className="text-sm mt-4 leading-relaxed">
+                {activeThread?.content}
+              </p>
+
             </div>
             <div className="flex gap-1.5 shrink-0">
               <Btn variant="ghost" size="sm" onClick={() => onNavigate("doubts")}>Ask AI 🧠</Btn>

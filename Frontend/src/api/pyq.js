@@ -1,9 +1,4 @@
-import axios from "axios";
-
-const API = axios.create({
-  baseURL: "/api/pyqs", // Adjust based on your main server route configuration
-  withCredentials: true,
-});
+import API from "./axios";
 
 export const getAllPyqs = async (params) => {
   const response = await API.get("/", { params });
