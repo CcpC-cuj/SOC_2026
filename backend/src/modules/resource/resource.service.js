@@ -36,7 +36,7 @@ const createResource = async(resourceData, file, userId) =>{
     }
 };
 
-const getAllResources = async(page, limit, search, subject, semester, tag, faculty)=>{
+const getAllResources = async({page=1, limit=10, search, subject, semester, resourceType, faculty})=>{
 
     const filter = {
         approved: true
@@ -65,8 +65,8 @@ const getAllResources = async(page, limit, search, subject, semester, tag, facul
     if(semester){
         filter.semester = semester;
     }
-    if(tag){
-        filter.tags = tag.toLowerCase();
+    if (resourceType) {
+        filter.resourceType = resourceType.toLowerCase();
     }
     if(faculty){
     filter["faculty.name"] = {
@@ -75,6 +75,8 @@ const getAllResources = async(page, limit, search, subject, semester, tag, facul
     };
 }
 
+    page = Number(page);
+    limit = Number(limit);
     const skip = (page-1)*limit;
 
     const totalResources = await Resource.countDocuments(filter);
@@ -83,11 +85,17 @@ const getAllResources = async(page, limit, search, subject, semester, tag, facul
     .populate("uploadedBy", "name email")
     .sort({createdAt: -1})
     .skip(skip)
-    .limit(limit);
+    .limit(limit)
+    .lean();
 
     return {
         resources,
-        totalResources
+        pagination: {
+            page,
+            limit,
+            totalResources,
+            totalPages: Math.ceil(totalResources / limit),
+        },
     };
 };
 
@@ -101,6 +109,15 @@ const getResourceById = async(id)=>{
     if (!resource) {
         throw new ApiError(404, "Resource not found!");
     }
+
+    await Resource.findByIdAndUpdate(
+        id,
+        {
+            $inc: {
+                downloads: 1
+            }
+        }
+    );
 
     return resource;
 };

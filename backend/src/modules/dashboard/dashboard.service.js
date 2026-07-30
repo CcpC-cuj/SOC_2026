@@ -1,13 +1,16 @@
 const User = require("../user/user.model");
 
 const Resource = require("../resource/resource.model");
+const Community = require("../community/community.model");
+
 
 const getDashboard = async (userId) => {
     const [user, 
         totalUploads, 
         approvedUploads,
         pendingUploads,
-        recentUploads
+        recentUploads,
+        recentPosts
 
     ] = await Promise.all([
         User.findById(userId)
@@ -33,8 +36,15 @@ const getDashboard = async (userId) => {
     .sort({
         createdAt: -1
     })
+    .limit(5),
+
+    Community.find()
+    .sort({createdAt: -1})
     .limit(5)
+    .populate("author", "name")
+
     ]);
+
 
     return{
         profile: user,
@@ -43,7 +53,8 @@ const getDashboard = async (userId) => {
             approvedUploads,
             pendingUploads
         },
-        recentUploads
+        recentUploads,
+        recentPosts
     }
 };
 

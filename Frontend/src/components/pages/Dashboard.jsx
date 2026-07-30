@@ -1,59 +1,13 @@
 import { Card, StatCard, Pill, Btn, SectionTitle, PageWrap } from "../ui";
+import { useEffect, useState } from "react";
+import { getDashboard } from "../../api/dashboard";
 import logo from "../../assets/cuj-logo.png";
-
-const ACTIVITY = [
-  {
-    icon: "⬆️",
-    bg: "bg-blue-500/12",
-    text: <>You uploaded <strong>OS Unit 4 Notes.pdf</strong></>,
-    time: "2 hours ago",
-  },
-  {
-    icon: "✅",
-    bg: "bg-emerald-500/10",
-    text: <>Rahul answered your doubt on <strong>Knapsack DP</strong></>,
-    time: "4 hours ago",
-  },
-  {
-    icon: "🏆",
-    bg: "bg-amber-500/10",
-    text: <>Sneha invited you to join <strong>HackBIT 2025 team</strong></>,
-    time: "Yesterday",
-  },
-  {
-    icon: "💌",
-    bg: "bg-pink-500/10",
-    text: <>New message from <strong>Priya Das</strong></>,
-    time: "Yesterday",
-  },
-];
-
-const TRENDING = [
-  {
-    rank: "01",
-    title: "Difference between process and thread?",
-    tag: "OS",
-    tagColor: "blue",
-    votes: 47,
-  },
-  {
-    rank: "02",
-    title: "Best resources for DBMS normalization?",
-    tag: "DBMS",
-    tagColor: "purple",
-    votes: 31,
-  },
-  {
-    rank: "03",
-    title: "SIH 2025 open — forming teams, need ML dev",
-    tag: "Hackathon",
-    tagColor: "amber",
-    votes: 28,
-  },
-];
 
 export default function Dashboard({ onNavigate }) {
   const user = JSON.parse(localStorage.getItem("user")) || {};
+
+  const [dashboard, setDashboard] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   const hour = new Date().getHours();
 
@@ -68,6 +22,21 @@ export default function Dashboard({ onNavigate }) {
   } else {
     greeting = "Good Night";
   }
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
+      try {
+        const data = await getDashboard();
+        setDashboard(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchDashboard();
+  }, []);
 
   return (
     <PageWrap>
@@ -118,9 +87,20 @@ export default function Dashboard({ onNavigate }) {
 
       {/* Stats */}
       <div className="grid grid-cols-4 gap-2.5 mb-5">
-        <StatCard value="142" label="Resources uploaded" delta="↑ 12 this week" />
-        <StatCard value="38" label="Doubts solved" delta="↑ 5 today" />
-        <StatCard value="7" label="Active projects" delta="2 open slots" deltaColor="text-blue-400" />
+        <StatCard
+          value={dashboard?.stats.totalUploads ?? 0}
+          label="Resources uploaded"
+        />
+          
+        <StatCard
+          value={dashboard?.stats.approvedUploads ?? 0}
+          label="Approved"
+        />
+          
+        <StatCard
+          value={dashboard?.stats.pendingUploads ?? 0}
+          label="Pending Approval"
+        />
         <StatCard value="94" label="Contribution pts" delta="★ Top 10%" deltaColor="text-amber-400" />
       </div>
 
@@ -130,52 +110,69 @@ export default function Dashboard({ onNavigate }) {
         <Card>
           <SectionTitle>Recent activity</SectionTitle>
 
-          {ACTIVITY.map((a, i) => (
-            <div
-              key={i}
-              className="flex items-start gap-2.5 py-2.5 border-b border-white/[0.07] last:border-0"
-            >
-              <div className={`w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0 ${a.bg}`}>
-                {a.icon}
-              </div>
-
-              <div>
-                <div className="text-sm leading-snug">{a.text}</div>
-                <div className="text-[11px] text-[#5a6a85] mt-0.5">
-                  {a.time}
+          {dashboard?.recentUploads?.length ? (
+            dashboard.recentUploads.map((resource) => (
+              <div
+                key={resource._id}
+                className="flex items-start gap-2.5 py-2.5 border-b border-white/[0.07] last:border-0"
+              >
+                <div className="w-7 h-7 rounded-lg flex items-center justify-center text-sm shrink-0 bg-blue-500/10">
+                  📄
                 </div>
+
+                <div className="flex-1">
+                  <div className="text-sm leading-snug">
+                    You uploaded <strong>{resource.title}</strong>
+                  </div>
+
+                  <div className="text-[11px] text-[#5a6a85] mt-0.5">
+                    {new Date(resource.createdAt).toLocaleDateString()}
+                  </div>
+                </div>
+
+                <Pill color={resource.approved ? "green" : "amber"}>
+                  {resource.approved ? "Approved" : "Pending"}
+                </Pill>
               </div>
+            ))
+          ) : (
+            <div className="text-sm text-[#5a6a85] py-4">
+              No recent uploads.
             </div>
-          ))}
+          )}
         </Card>
 
         <Card>
           <SectionTitle>Trending in community</SectionTitle>
-
-          {TRENDING.map((t) => (
-            <div
-              key={t.rank}
-              className="flex items-center gap-2.5 py-2.5 border-b border-white/[0.07] last:border-0"
-            >
-              <span className="font-['Syne',sans-serif] text-lg font-extrabold text-white/15 w-6">
-                {t.rank}
-              </span>
-
-              <div className="flex-1">
-                <div className="text-sm font-medium leading-snug">
-                  {t.title}
-                </div>
-
-                <div className="mt-1">
-                  <Pill color={t.tagColor}>{t.tag}</Pill>
-                </div>
+          {
+            dashboard?.trendingPosts?.map((post) => (
+              <div
+                  key={post._id}
+                  className="flex items-center gap-2.5 py-2.5 border-b border-white/[0.07]"
+              >
+                  <div className="flex-1">
+                      <div className="text-sm font-medium">
+                          {post.title}
+                      </div>
+                      
+                      <div className="mt-1 flex gap-2 items-center">
+                          <Pill color="blue">
+                              {post.subject}
+                          </Pill>
+                      
+                          <span className="text-xs text-[#5a6a85]">
+                              by {post.author.name}
+                          </span>
+                      </div>
+                  </div>
+                      
+                  <span className="text-xs text-emerald-500">
+                      👍 {post.likesCount}
+                  </span>
               </div>
-
-              <span className="text-xs text-emerald-400">
-                ↑ {t.votes}
-              </span>
-            </div>
-          ))}
+          ))
+          }
+          
         </Card>
 
       </div>

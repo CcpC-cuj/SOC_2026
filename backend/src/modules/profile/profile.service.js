@@ -70,6 +70,21 @@ const uploadResume = async(userId, file)=>{
     }
 }
 
+const deleteResume = async(userId)=>{
+    const user = await User.findById(userId);
+
+    if(!user){
+        throw new ApiError(404, "User not found");
+    }
+
+    const updatedUser  = await User.findByIdAndUpdate(userId,
+        {resumeUrl:""},
+        {new: true}
+    );
+
+    return updatedUser;
+}
+
 const uploadAvatar = async(userId, file)=>{
 
     if(!file) throw new ApiError(400, "Avatar not found");
@@ -101,9 +116,26 @@ const uploadAvatar = async(userId, file)=>{
     }
 }
 
+const deleteAvatar = async(userId)=>{
+    const user = await User.findById(userId);
+
+    if(!user){
+        throw new ApiError(404, "User not found");
+    }
+
+    const updatedUser  = await User.findByIdAndUpdate(userId,
+        {avatar:""},
+        {new: true}
+    );
+
+    return updatedUser;
+}
+
 module.exports = {
     getMyProfile,
     updateProfile,
     uploadResume,
-    uploadAvatar
+    uploadAvatar,
+    deleteResume,
+    deleteAvatar
 };

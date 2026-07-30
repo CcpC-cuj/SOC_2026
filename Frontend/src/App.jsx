@@ -25,16 +25,23 @@ const PAGES = {
 };
 
 export default function App() {
-  const [user, setUser] = useState(null); // null | "student" | "admin"
+
+  const [user, setUser] = useState(() => {
+    const savedUser = localStorage.getItem("user");
+    return savedUser ? JSON.parse(savedUser) : null;
+  });
+
   const [page, setPage] = useState("dashboard");
   const Page = PAGES[page] || Dashboard;
 
   if (!user) {
     return (
       <Login
-        onLogin={(role) => {
-          setUser(role);
-          setPage(role === "admin" ? "admin" : "dashboard");
+        onLogin={() => {
+          const savedUser = JSON.parse(localStorage.getItem("user"));
+        
+          setUser(savedUser);
+          setPage(savedUser.role === "admin" ? "admin" : "dashboard");
         }}
       />
     );
@@ -45,15 +52,22 @@ export default function App() {
       <Header
         onNavigate={setPage}
         onLogout={() => {
+          localStorage.removeItem("token");
+          localStorage.removeItem("user");
+
           setUser(null);
           setPage("dashboard");
         }}
-        userRole={user}
+        userRole={user.role}
       />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar activePage={page} onNavigate={setPage} userRole={user} />
         <main className="flex-1 overflow-y-auto">
-          <Page onNavigate={setPage} userRole={user} />
+          <Page
+            onNavigate={setPage}
+            userRole={user.role}
+            user={user}
+          />
         </main>
       </div>
     </div>
