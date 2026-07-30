@@ -3,6 +3,8 @@ const validate = (schema) => {
 
     return (req, res, next) => {
 
+        console.log(req.body);
+        console.log(req.file);
         const result =
         schema.safeParse(req.body);
 

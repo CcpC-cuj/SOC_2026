@@ -7,13 +7,15 @@ const SEM_FILTERS = ["All", "Sem 3", "Sem 4", "Sem 5", "Sem 6"];
 const TYPE_FILTERS = ["All", "Notes", "Assignment", "Lab", "Tutorial"];
 
 export default function Resources({ onNavigate }) {
-  const [semFilter, setSemFilter] = useState("All");
-  const [typeFilter, setTypeFilter] = useState("All");
+  const [filters, setFilters] = useState({
+      search: "",
+      semester: "",
+      resourceType: "",
+  });
 
   const [resources, setResources] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-  const [search, setSearch] = useState("");
   const [showUploadModal, setShowUploadModal] = useState(false);
 
   const fetchResources = async () => {
@@ -21,23 +23,21 @@ export default function Resources({ onNavigate }) {
       setLoading(true);
       setError("");
 
-      const params = {};
+     const params = {};
 
-      if (search.trim()) {
-        params.search = search;
-      }
+    if (filters.search.trim()) {
+        params.search = filters.search;
+    }
+    
+    if (filters.semester) {
+        params.semester = Number(filters.semester);
+    }
+    
+    if (filters.resourceType) {
+        params.resourceType = filters.resourceType;
+    }
 
-      if (semFilter !== "All") {
-        params.semester = Number(
-          semFilter.replace("Sem ", "")
-        );
-      }
-
-      if (typeFilter !== "All") {
-        params.resourceType = typeFilter.toLowerCase();
-      }
-
-      const data = await getResources(params);
+    const data = await getResources(params);
 
       setResources(data.resources || []);
     } catch (err) {
@@ -54,7 +54,7 @@ export default function Resources({ onNavigate }) {
     }, 500);
 
     return () => clearTimeout(timer);
-  }, [search, semFilter, typeFilter]);
+  }, [filters]);
 
   return (
     <PageWrap
@@ -69,27 +69,15 @@ export default function Resources({ onNavigate }) {
       {/* Search */}
       <div className="flex gap-2.5 mb-3">
         <input
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          placeholder="🔍 Search notes, subjects..."
-          className="bg-[#ece4c8] border border-black/10 rounded-lg px-3 py-2 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-white/20 transition-colors w-72"
-        />
-      </div>
-
-      {/* Filters */}
-      <div className="flex items-center gap-2 flex-wrap mb-4">
-        <FilterChips
-          chips={SEM_FILTERS}
-          active={semFilter}
-          onChange={setSemFilter}
-        />
-
-        <div className="w-px h-4 bg-white/10" />
-
-        <FilterChips
-          chips={TYPE_FILTERS}
-          active={typeFilter}
-          onChange={setTypeFilter}
+            value={filters.search}
+            onChange={(e) =>
+                setFilters((prev) => ({
+                    ...prev,
+                    search: e.target.value,
+                }))
+            }
+            placeholder="🔍 Search notes, subjects..."
+            className="bg-[#ece4c8] border border-black/10 rounded-lg px-3 py-2 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-white/20 transition-colors w-72"
         />
       </div>
 

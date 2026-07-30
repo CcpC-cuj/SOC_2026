@@ -9,6 +9,8 @@ import {
   removeAvatar,
   removeResume,
 } from "../../api/profile";
+
+import {getMyRecentResources} from "../../api/resources";
 const ALL_SKILLS = [
   "React",
   "Python",
@@ -56,20 +58,6 @@ const MYPROJECTS = [
   },
 ];
 
-const MYRESOURCES = [
-  {
-    name: "DS Complete Notes",
-    meta: "Sem 5 · 142 downloads",
-  },
-  {
-    name: "OS Unit 4 Notes",
-    meta: "Sem 5 · 98 downloads",
-  },
-  {
-    name: "CN Lab Manual",
-    meta: "Sem 5 · 64 downloads",
-  },
-];
 
 const RESUME_ACCEPT =
   ".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document";
@@ -84,8 +72,9 @@ export default function Profile({ onNavigate }) {
   const [profile, setProfile] = useState(null);
   const [draft, setDraft] = useState(null);
 
-  useEffect(() => {
-    const fetchProfile = async () => {
+  const [myResources, setMyResources] = useState([]);
+
+  const fetchProfile = async () => {
       try {
         const res = await getProfile();
 
@@ -111,7 +100,19 @@ export default function Profile({ onNavigate }) {
       }
     };
 
+    const fetchMyResources = async () => {
+      try {
+           const res = await getMyRecentResources();
+           setMyResources(res.data);
+       } catch (err) {
+           console.error(err);
+           setMyResources([]);
+       }
+    };
+
+  useEffect(() => {
     fetchProfile();
+    fetchMyResources();
   }, []);
 
   const startEdit = () => {
@@ -139,9 +140,10 @@ export default function Profile({ onNavigate }) {
       const user = res.data.data;
 
       const updated = {
-        ...draft,
-        photo: user.avatar ?? draft.photo,
-        resume: user.resumeUrl ?? draft.resume,
+          ...draft,
+          achievements: user.achievements ?? draft.achievements,
+          photo: user.avatar ?? draft.photo,
+          resume: user.resumeUrl ?? draft.resume,
       };
 
       setProfile(updated);
@@ -302,31 +304,24 @@ export default function Profile({ onNavigate }) {
     a.click();
   };
 
-  const updateAchievement = (index, field, value) => {
-    setDraft((d) => {
-      const next = [...d.achievements];
-      next[index] = {
-        ...next[index],
-        [field]: value,
-      };
-
-      return {
-        ...d,
-        achievements: next,
-      };
-    });
+  const updateAchievement = (index, value) => {
+      setDraft((d) => {
+          const next = [...d.achievements];
+          next[index] = value;
+      
+          return {
+              ...d,
+              achievements: next,
+          };
+      });
   };
 
   const addAchievement = () =>
     setDraft((d) => ({
       ...d,
       achievements: [
-        ...d.achievements,
-        {
-          icon: "🏆",
-          title: "",
-          subtitle: "",
-        },
+          ...d.achievements,
+          "",
       ],
     }));
 
@@ -761,39 +756,11 @@ export default function Profile({ onNavigate }) {
                   className="bg-[#ece4c8] rounded-lg p-3 flex gap-2 items-center"
                 >
 
-                  <select
-                    value={a.icon}
-                    onChange={(e) =>
-                      updateAchievement(index, "icon", e.target.value)
-                    }
-                    className="text-xl bg-transparent"
-                  >
-                    {ACHIEVEMENT_ICONS.map((icon) => (
-                      <option
-                        key={icon}
-                        value={icon}
-                      >
-                        {icon}
-                      </option>
-                    ))}
-                  </select>
-
                   <input
-                    value={a.title}
-                    onChange={(e) =>
-                      updateAchievement(index, "title", e.target.value)
-                    }
-                    placeholder="Title"
-                    className="flex-1 px-2 py-1 rounded border"
-                  />
-
-                  <input
-                    value={a.subtitle}
-                    onChange={(e) =>
-                      updateAchievement(index, "subtitle", e.target.value)
-                    }
-                    placeholder="Subtitle"
-                    className="flex-1 px-2 py-1 rounded border"
+                      value={a}
+                      onChange={(e) => updateAchievement(index, e.target.value)}
+                      placeholder="Achievement"
+                      className="flex-1 px-3 py-2 rounded border"
                   />
 
                   <button
@@ -834,16 +801,8 @@ export default function Profile({ onNavigate }) {
                     className="flex-1 min-w-[100px] bg-[#ece4c8] rounded-xl p-3 text-center"
                   >
 
-                    <div className="text-3xl">
-                      {a.icon}
-                    </div>
-
-                    <div className="font-medium mt-2">
-                      {a.title}
-                    </div>
-
-                    <div className="text-xs text-[#5a6a85]">
-                      {a.subtitle}
+                    <div className="font-medium">
+                        🏆 {a}
                     </div>
 
                   </div>
@@ -909,10 +868,10 @@ export default function Profile({ onNavigate }) {
             Uploaded Resources
           </SectionTitle>
 
-          {MYRESOURCES.map((resource, index) => (
+          {myResources.map((resource) => (
 
             <div
-              key={index}
+              key={resource._id}
               className="flex items-center gap-3 py-3 border-b border-white/10 last:border-0"
             >
 
@@ -923,11 +882,11 @@ export default function Profile({ onNavigate }) {
               <div className="flex-1">
 
                 <div className="font-medium">
-                  {resource.name}
+                    {resource.title}
                 </div>
 
                 <div className="text-xs text-[#5a6a85]">
-                  {resource.meta}
+                    Sem {resource.semester} · {resource.downloads} downloads
                 </div>
 
               </div>

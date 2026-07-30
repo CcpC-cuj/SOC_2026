@@ -61,6 +61,12 @@ const getAllPyqs = async (query) => {
                     $regex: query.search,
                     $options: "i"
                 }
+            },
+            {
+                facultyName: {
+                    $regex: query.search,
+                    $options: "i"
+                }
             }
         ];
     }
@@ -79,11 +85,6 @@ const getAllPyqs = async (query) => {
 
     if (query.examType) {
         filter.examType = query.examType;
-    }
-
-    if (query.subject) {
-    filter.subject = {$regex: query.subject,
-        $options: "i"}
     }
 
     const [pyqs, totalPyqs] = await Promise.all([

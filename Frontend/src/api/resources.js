@@ -63,3 +63,9 @@ export const deleteResource = async (id) => {
 
   return response.data;
 };
+
+export const getMyRecentResources = async() =>{
+  const response =  await API.get("/resources/my/recent");
+
+  return response.data;
+}

@@ -13,6 +13,7 @@ const resourceController = require("./resource.controller");
 
 //GET
 router.get("/", resourceController.getAllResources);
+router.get("/my/recent",authMiddleware, resourceController.getMyRecentResources);
 router.get("/pending", authMiddleware
     , authorize("admin"), resourceController.getPendingResources);
 

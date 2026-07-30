@@ -160,11 +160,22 @@ const getPendingResources = async()=>{
     return resources;
 }
 
+const getMyRecentResources = async (userId) => {
+    return await Resource.find({
+        uploadedBy: userId,
+        approved: true,
+    })
+        .sort({ createdAt: -1 })
+        .limit(3)
+        .select("title semester downloads");
+};
+
 module.exports = {
     createResource,
     getAllResources,
     getResourceById,
     approveResource,
     deleteResource,
-    getPendingResources
+    getPendingResources,
+    getMyRecentResources
 };

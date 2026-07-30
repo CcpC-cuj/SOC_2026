@@ -174,10 +174,26 @@ export function Input({ placeholder, className = "", value, onChange }) {
 }
 
 // ── Select ────────────────────────────────────────────────
-export function Select({ options, className = "" }) {
-  return (
-    <select className={`bg-[#ece4c8] border border-black/10 rounded-lg px-2.5 py-1.5 text-xs text-[#1a2540] outline-none font-['DM_Sans',sans-serif] cursor-pointer ${className}`}>
-      {options.map((o) => <option key={o}>{o}</option>)}
-    </select>
-  );
+export function Select({
+    options,
+    value,
+    onChange,
+    className = "",
+}) {
+    return (
+        <select
+            value={value}
+            onChange={(e) => onChange?.(e.target.value)}
+            className={`bg-[#ece4c8] border border-black/10 rounded-lg px-2.5 py-1.5 text-xs text-[#1a2540] outline-none font-['DM_Sans',sans-serif] cursor-pointer ${className}`}
+        >
+            {options.map((option) => (
+                <option
+                    key={option}
+                    value={option}
+                >
+                    {option}
+                </option>
+            ))}
+        </select>
+    );
 }

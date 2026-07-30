@@ -74,11 +74,22 @@ const getPendingResources = asyncHandler(async(req, res)=>{
     );
 });
 
+const getMyRecentResources = asyncHandler(async (req, res) => {
+    const resources = await resourceService.getMyRecentResources(req.user.id);
+
+    res.status(200).json(
+        new ApiResponse(200,
+        "Recent resources fetched successfully",
+        resources)
+    );
+});
+
 module.exports = {
     createResource,
     getAllResources,
     getResourceById,
     approveResource,
     deleteResource,
-    getPendingResources
+    getPendingResources,
+    getMyRecentResources
 };
