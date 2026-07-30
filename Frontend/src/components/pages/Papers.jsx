@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, Pill, Btn, SectionTitle, TabBar, StatCard, PageWrap, Select } from "../ui";
-import { getAllPyqs, uploadPyq as apiUploadPyq } from "../../services/pyq.api";
+import { getAllPyqs, uploadPyq as apiUploadPyq } from "../../api/pyq";
 
 const TOPICS = [
   { name: "Dynamic programming", count: 22, pct: 90, hot: true, color: "bg-blue-500/55" },
