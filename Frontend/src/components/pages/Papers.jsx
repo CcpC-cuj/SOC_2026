@@ -105,11 +105,106 @@ function Analyser({ onNavigate }) {
   );
 }
 
+function UploadModal({ onClose, onUploaded }) {
+  const [form, setForm] = useState({ subject: "", semester: "", branch: "", year: "", examType: "end-sem" });
+  const [file, setFile] = useState(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState("");
+
+  const set = (key) => (e) => setForm((prev) => ({ ...prev, [key]: e.target.value }));
+
+  const handleSubmit = async () => {
+    if (!file || !form.subject || !form.semester || !form.branch || !form.year) {
+      setError("Fill all fields and choose a file.");
+      return;
+    }
+    try {
+      setSubmitting(true);
+      setError("");
+      const fd = new FormData();
+      fd.append("file", file);
+      Object.entries(form).forEach(([k, v]) => fd.append(k, v));
+      await apiUploadPyq(fd);
+      onUploaded();
+      onClose();
+    } catch (err) {
+      console.error("Upload failed:", err);
+      setError("Upload failed. Try again.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md">
+        <SectionTitle>📤 Upload PYQ</SectionTitle>
+        <div className="flex flex-col gap-2.5 mt-2">
+          <input
+            type="text"
+            placeholder="Subject (e.g. Data Structures)"
+            value={form.subject}
+            onChange={set("subject")}
+            className="px-3 py-2 text-sm rounded-lg bg-[#f5efdc] border border-black/10 outline-none"
+          />
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Semester (e.g. 3)"
+              value={form.semester}
+              onChange={set("semester")}
+              className="flex-1 px-3 py-2 text-sm rounded-lg bg-[#f5efdc] border border-black/10 outline-none"
+            />
+            <input
+              type="text"
+              placeholder="Branch (e.g. CSE)"
+              value={form.branch}
+              onChange={set("branch")}
+              className="flex-1 px-3 py-2 text-sm rounded-lg bg-[#f5efdc] border border-black/10 outline-none"
+            />
+          </div>
+          <div className="flex gap-2">
+            <input
+              type="text"
+              placeholder="Year (e.g. 2024)"
+              value={form.year}
+              onChange={set("year")}
+              className="flex-1 px-3 py-2 text-sm rounded-lg bg-[#f5efdc] border border-black/10 outline-none"
+            />
+            <select
+              value={form.examType}
+              onChange={set("examType")}
+              className="flex-1 px-3 py-2 text-sm rounded-lg bg-[#f5efdc] border border-black/10 outline-none"
+            >
+              <option value="end-sem">end-sem</option>
+              <option value="sessional">sessional</option>
+            </select>
+          </div>
+          <input
+            type="file"
+            accept=".pdf"
+            onChange={(e) => setFile(e.target.files?.[0] || null)}
+            className="text-xs"
+          />
+          {error && <div className="text-xs text-red-500">{error}</div>}
+          <div className="flex justify-end gap-2 mt-1">
+            <Btn variant="ghost" size="sm" onClick={onClose}>Cancel</Btn>
+            <Btn size="sm" onClick={handleSubmit} disabled={submitting}>
+              {submitting ? "Uploading..." : "Upload"}
+            </Btn>
+          </div>
+        </div>
+      </Card>
+    </div>
+  );
+}
+
 export default function Papers({ onNavigate }) {
   const [tab, setTab] = useState("Browse papers");
   const [pyqs, setPyqs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({ subject: "", year: "", examType: "" });
+  const [showUpload, setShowUpload] = useState(false);
 
   useEffect(() => {
     if (tab === "Browse papers") {
@@ -135,19 +230,22 @@ export default function Papers({ onNavigate }) {
 
       {tab === "Browse papers" ? (
         <div>
-          <div className="flex gap-2 mb-3 flex-wrap">
-            <Select 
-              options={["All subjects", "Data Structures", "OS", "DBMS", "CN"]} 
-              onChange={(val) => setFilters(prev => ({ ...prev, subject: val === "All subjects" ? "" : val }))} 
-            />
-            <Select 
-              options={["All years", "2024", "2023", "2022", "2021"]} 
-              onChange={(val) => setFilters(prev => ({ ...prev, year: val === "All years" ? "" : val }))} 
-            />
-            <Select 
-              options={["All types", "end-sem", "sessional"]} 
-              onChange={(val) => setFilters(prev => ({ ...prev, examType: val === "All types" ? "" : val }))} 
-            />
+          <div className="flex gap-2 mb-3 flex-wrap items-center justify-between">
+            <div className="flex gap-2 flex-wrap">
+              <Select 
+                options={["All subjects", "Data Structures", "OS", "DBMS", "CN"]} 
+                onChange={(val) => setFilters(prev => ({ ...prev, subject: val === "All subjects" ? "" : val }))} 
+              />
+              <Select 
+                options={["All years", "2024", "2023", "2022", "2021"]} 
+                onChange={(val) => setFilters(prev => ({ ...prev, year: val === "All years" ? "" : val }))} 
+              />
+              <Select 
+                options={["All types", "end-sem", "sessional"]} 
+                onChange={(val) => setFilters(prev => ({ ...prev, examType: val === "All types" ? "" : val }))} 
+              />
+            </div>
+            <Btn size="sm" onClick={() => setShowUpload(true)}>📤 Upload PYQ</Btn>
           </div>
 
           {loading ? (
@@ -160,6 +258,10 @@ export default function Papers({ onNavigate }) {
         </div>
       ) : (
         <Analyser onNavigate={onNavigate} />
+      )}
+
+      {showUpload && (
+        <UploadModal onClose={() => setShowUpload(false)} onUploaded={fetchPyqs} />
       )}
     </PageWrap>
   );
