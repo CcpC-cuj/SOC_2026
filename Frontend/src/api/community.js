@@ -14,3 +14,8 @@ export const toggleDownvote = async (postId) => {
     const { data } = await API.patch(`/community/${postId}/downvote`);
     return data.data;
 };
+
+export const createPost = async (postData) => {
+    const { data } = await API.post("/community", postData);
+    return data.data;
+};

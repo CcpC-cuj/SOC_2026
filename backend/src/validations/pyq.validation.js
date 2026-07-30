@@ -5,7 +5,7 @@ const createPyqSchema = z.object({
     title: z
         .string()
         .trim()
-        .min(3, "Title must be at least 3 characters"),
+        .min(3, "Title must be at least 3 characters").optional(),
 
     subject: z
         .string()

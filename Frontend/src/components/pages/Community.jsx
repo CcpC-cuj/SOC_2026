@@ -4,6 +4,7 @@ import {
     getAllPosts,
     toggleUpvote,
     toggleDownvote,
+    createPost,
 } from "../../api/community";
 
 const COMMENTS = [
@@ -17,34 +18,92 @@ export default function Community({ onNavigate }) {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("All");
 
-  useEffect(() => {
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
-    const fetchPosts = async () => {
+  const [newPost, setNewPost] = useState({
+      title: "",
+      content: "",
+  });
 
-        try {
+  const [creating, setCreating] = useState(false);
 
-            const data = await getAllPosts();
+  const fetchPosts = async () => {
+    try {
+        const data = await getAllPosts();
 
-            setPosts(data.posts);
+        setPosts(data.posts);
 
-            if (data.posts.length > 0) {
-                setActiveThread(data.posts[0]);
-            }
+        if (data.posts.length > 0) {
+            setActiveThread((prev) => {
+                if (!prev) return data.posts[0];
 
-        } catch (err) {
-
-            console.error(err);
-
-        } finally {
-
-            setLoading(false);
-
+                return (
+                    data.posts.find((post) => post._id === prev._id) ||
+                    data.posts[0]
+                );
+            });
         }
+    } catch (err) {
+        console.error(err);
+    } finally {
+        setLoading(false);
+    }
+};
 
-    };
+const handleUpvote = async (postId) => {
+    try {
+        await toggleUpvote(postId);
+        await fetchPosts();
+    } catch (err) {
+        console.error(err);
+    }
+};
 
+const handleDownvote = async (postId) => {
+    try {
+        await toggleDownvote(postId);
+        await fetchPosts();
+    } catch (err) {
+        console.error(err);
+    }
+};
+
+const handleCreatePost = async () => {
+
+    if (!newPost.title.trim() || !newPost.content.trim()) {
+        return;
+    }
+
+    try {
+
+        setCreating(true);
+
+        await createPost(newPost);
+
+        setNewPost({
+            title: "",
+            content: "",
+        });
+
+        setShowCreateModal(false);
+
+        await fetchPosts();
+
+    } catch (err) {
+
+        console.error(err);
+
+    } finally {
+
+        setCreating(false);
+
+    }
+
+};
+
+useEffect(() => {
     fetchPosts();
-  }, []);
+}, []);
 
   if (loading) {
         return (
@@ -66,7 +125,11 @@ export default function Community({ onNavigate }) {
     <PageWrap
       title="Community"
       subtitle="Discuss doubts, share opportunities, find mentors"
-      action={<Btn>+ New thread</Btn>}
+      action={
+    <Btn onClick={() => setShowCreateModal(true)}>
+        + New Thread
+    </Btn>
+}
     >
       <div className="mb-3">
         <FilterChips chips={["All","Doubts","Hackathon","Mentorship","Projects"]} active={filter} onChange={setFilter} />
@@ -122,9 +185,25 @@ export default function Community({ onNavigate }) {
               </p>
 
               <div className="flex items-center gap-2 text-[11px] text-[#5a6a85]">
-                <span>👍 {t.upvotes.length}</span>
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleUpvote(t._id);
+                  }}
+                  className="text-xs hover:text-green-600"
+              >
+                👍{t.upvotes.length}
+              </button>
 
-                <span>👎 {t.downvotes.length}</span>
+                <button
+                 onClick={(e) => {
+                  e.stopPropagation();
+                  handleDownvote(t._id);
+                  }}
+                 className="text-xs hover:text-red-600"
+                >
+                  👎{t.downvotes.length}
+                </button>
 
                 <span>{new Date(t.createdAt).toLocaleDateString()}</span>
               </div>
@@ -150,6 +229,24 @@ export default function Community({ onNavigate }) {
                 {activeThread?.content}
               </p>
 
+              <div className="flex gap-3 mt-4">
+
+    <Btn
+        variant="ghost"
+        onClick={() => handleUpvote(activeThread._id)}
+    >
+        👍 {activeThread.upvotes.length}
+    </Btn>
+
+    <Btn
+        variant="ghost"
+        onClick={() => handleDownvote(activeThread._id)}
+    >
+        👎 {activeThread.downvotes.length}
+    </Btn>
+
+</div>
+
             </div>
             <div className="flex gap-1.5 shrink-0">
               <Btn variant="ghost" size="sm" onClick={() => onNavigate("doubts")}>Ask AI 🧠</Btn>
@@ -160,25 +257,7 @@ export default function Community({ onNavigate }) {
             </div>
           </div>
 
-          {/* Comments */}
-          {COMMENTS.map((c, i) => (
-            <div key={i} className="flex gap-2.5 mb-3.5">
-              <Avatar initials={c.initials} colorIndex={c.colorIndex} />
-              <div className="flex-1">
-                <div className="bg-[#ece4c8] rounded-xl px-3 py-2.5">
-                  <div className="text-xs font-medium mb-1">
-                    {c.name} <span className="font-normal text-[#5a6a85]">· {c.sem}</span>
-                  </div>
-                  <div className="text-sm leading-relaxed text-[#1a2540]">{c.text}</div>
-                </div>
-                <div className="flex gap-3 mt-1.5 ml-1">
-                  <button className="text-[11px] text-[#5a6a85] hover:text-blue-400 transition-colors cursor-pointer bg-transparent border-0">↑ {c.votes}</button>
-                  <button className="text-[11px] text-[#5a6a85] hover:text-blue-400 transition-colors cursor-pointer bg-transparent border-0">Reply</button>
-                  <button onClick={() => onNavigate("messages")} className="text-[11px] text-[#5a6a85] hover:text-blue-400 transition-colors cursor-pointer bg-transparent border-0">💌 Message</button>
-                </div>
-              </div>
-            </div>
-          ))}
+          
 
           {/* Reply box */}
           <div className="bg-[#ece4c8] border border-black/10 rounded-xl px-3 py-2.5 text-sm text-[#5a6a85] cursor-text mt-2">
@@ -186,6 +265,66 @@ export default function Community({ onNavigate }) {
           </div>
         </div>
       </div>
+
+      {showCreateModal && (
+
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center z-50">
+
+        <div className="bg-[#f5efdc] rounded-xl p-6 w-full max-w-lg">
+
+            <h2 className="text-xl font-semibold mb-5">
+                Create New Thread
+            </h2>
+
+            <input
+                type="text"
+                placeholder="Title"
+                value={newPost.title}
+                onChange={(e) =>
+                    setNewPost({
+                        ...newPost,
+                        title: e.target.value,
+                    })
+                }
+                className="w-full mb-4 border rounded-lg px-3 py-2"
+            />
+
+            <textarea
+                rows={6}
+                placeholder="What's on your mind?"
+                value={newPost.content}
+                onChange={(e) =>
+                    setNewPost({
+                        ...newPost,
+                        content: e.target.value,
+                    })
+                }
+                className="w-full border rounded-lg px-3 py-2"
+            />
+
+            <div className="flex justify-end gap-3 mt-5">
+
+                <Btn
+                    variant="ghost"
+                    onClick={() => setShowCreateModal(false)}
+                >
+                    Cancel
+                </Btn>
+
+                <Btn
+                    disabled={creating}
+                    onClick={handleCreatePost}
+                >
+                    {creating ? "Posting..." : "Post"}
+                </Btn>
+
+            </div>
+
+        </div>
+
+    </div>
+
+)}
     </PageWrap>
   );
 }

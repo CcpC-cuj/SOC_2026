@@ -101,7 +101,7 @@ export default function Dashboard({ onNavigate }) {
           value={dashboard?.stats.pendingUploads ?? 0}
           label="Pending Approval"
         />
-        <StatCard value="94" label="Contribution pts" delta="★ Top 10%" deltaColor="text-amber-400" />
+        <StatCard value={dashboard?.profile.contributionScore?? 0} label="Contribution pts" delta="★" deltaColor="text-amber-400" />
       </div>
 
       {/* Content */}
@@ -145,7 +145,7 @@ export default function Dashboard({ onNavigate }) {
         <Card>
           <SectionTitle>Trending in community</SectionTitle>
           {
-            dashboard?.trendingPosts?.map((post) => (
+            dashboard?.recentPosts?.map((post) => (
               <div
                   key={post._id}
                   className="flex items-center gap-2.5 py-2.5 border-b border-white/[0.07]"
