@@ -1,6 +1,6 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, Pill, Btn, SectionTitle, TabBar, StatCard, PageWrap, Select } from "../ui";
-import { PAPERS } from "../../data/content";
+import { getAllPyqs, uploadPyq as apiUploadPyq } from "../../services/pyq.api";
 
 const TOPICS = [
   { name: "Dynamic programming", count: 22, pct: 90, hot: true, color: "bg-blue-500/55" },
@@ -25,16 +25,16 @@ function PaperRow({ paper, onNavigate }) {
     <div className="flex items-center gap-3 p-3 bg-[#f5efdc] border border-black/10 rounded-xl mb-1.5 hover:border-white/15 transition-colors">
       <div className="w-9 h-9 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 text-base shrink-0">📄</div>
       <div className="flex-1">
-        <div className="text-sm font-medium">{paper.name}</div>
+        <div className="text-sm font-medium">{paper.title}</div>
         <div className="text-[11px] text-[#5a6a85] mt-0.5 flex items-center gap-1.5">
-          {paper.meta} · <Pill color={paper.typeColor} className="text-[10px]">{paper.type}</Pill>
+          {paper.subject} · Sem {paper.semester} · {paper.branch} · {paper.year}
+          <Pill color="bg-blue-500/20 text-blue-700" className="text-[10px]">{paper.examType}</Pill>
         </div>
       </div>
-      <div className="flex gap-1 flex-wrap mr-3">
-        {paper.tags.map(([t, c]) => <Pill key={t} color={c} className="text-[10px]">{t}</Pill>)}
-      </div>
       <div className="flex gap-1.5">
-        <Btn variant="ghost" size="sm">👁️ Preview</Btn>
+        <a href={paper.fileUrl} target="_blank" rel="noopener noreferrer">
+          <Btn variant="ghost" size="sm">👁️ Preview</Btn>
+        </a>
         <Btn variant="ghost" size="sm" onClick={() => onNavigate("doubts")}>Practise 🧠</Btn>
       </div>
     </div>
@@ -44,14 +44,12 @@ function PaperRow({ paper, onNavigate }) {
 function Analyser({ onNavigate }) {
   return (
     <div>
-      {/* Subject/Sem filters */}
       <div className="flex gap-2 items-center mb-4 flex-wrap">
         <Select options={["Data Structures","OS","DBMS","CN","ML"]} />
         <Select options={["Sem 5","Sem 4","Sem 3"]} />
         <span className="text-xs text-[#5a6a85]">47 papers analysed · 2019–2024</span>
       </div>
 
-      {/* Stats */}
       <div className="grid grid-cols-4 gap-2.5 mb-4">
         <StatCard value="47" label="Papers analysed" />
         <StatCard value="6" label="Years covered" />
@@ -60,7 +58,6 @@ function Analyser({ onNavigate }) {
       </div>
 
       <div className="grid grid-cols-2 gap-3">
-        {/* Topic frequency */}
         <Card>
           <SectionTitle>📊 Most repeated topics (2019–2024)</SectionTitle>
           {TOPICS.map((t) => (
@@ -79,7 +76,6 @@ function Analyser({ onNavigate }) {
           ))}
         </Card>
 
-        {/* Predictions */}
         <Card>
           <SectionTitle>🎯 Predicted for next exam</SectionTitle>
           {PREDICTIONS.map((p) => (
@@ -111,6 +107,27 @@ function Analyser({ onNavigate }) {
 
 export default function Papers({ onNavigate }) {
   const [tab, setTab] = useState("Browse papers");
+  const [pyqs, setPyqs] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [filters, setFilters] = useState({ subject: "", year: "", examType: "" });
+
+  useEffect(() => {
+    if (tab === "Browse papers") {
+      fetchPyqs();
+    }
+  }, [tab, filters]);
+
+  const fetchPyqs = async () => {
+    try {
+      setLoading(true);
+      const data = await getAllPyqs(filters);
+      setPyqs(data.pyqs || []);
+    } catch (error) {
+      console.error("Failed to fetch PYQs:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <PageWrap title="Papers & PYQ Analyser" subtitle="Previous year papers with AI-powered topic analysis and exam predictions">
@@ -119,12 +136,27 @@ export default function Papers({ onNavigate }) {
       {tab === "Browse papers" ? (
         <div>
           <div className="flex gap-2 mb-3 flex-wrap">
-            <Select options={["All subjects","Data Structures","OS","DBMS","CN"]} />
-            <Select options={["All years","2024","2023","2022","2021"]} />
-            <Select options={["All types","End-sem","Mid-sem","Viva"]} />
-            <Btn size="sm" className="ml-auto" onClick={() => {}}>⬆️ Upload paper</Btn>
+            <Select 
+              options={["All subjects", "Data Structures", "OS", "DBMS", "CN"]} 
+              onChange={(val) => setFilters(prev => ({ ...prev, subject: val === "All subjects" ? "" : val }))} 
+            />
+            <Select 
+              options={["All years", "2024", "2023", "2022", "2021"]} 
+              onChange={(val) => setFilters(prev => ({ ...prev, year: val === "All years" ? "" : val }))} 
+            />
+            <Select 
+              options={["All types", "end-sem", "sessional"]} 
+              onChange={(val) => setFilters(prev => ({ ...prev, examType: val === "All types" ? "" : val }))} 
+            />
           </div>
-          {PAPERS.map((p, i) => <PaperRow key={i} paper={p} onNavigate={onNavigate} />)}
+
+          {loading ? (
+            <div className="text-center py-6 text-sm text-[#5a6a85]">Loading papers...</div>
+          ) : pyqs.length > 0 ? (
+            pyqs.map((p) => <PaperRow key={p._id} paper={p} onNavigate={onNavigate} />)
+          ) : (
+            <div className="text-center py-6 text-sm text-[#5a6a85]">No papers found.</div>
+          )}
         </div>
       ) : (
         <Analyser onNavigate={onNavigate} />
