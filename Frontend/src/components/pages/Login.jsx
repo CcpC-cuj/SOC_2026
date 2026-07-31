@@ -22,7 +22,7 @@ function expectedUniEmailPlaceholder(name, regno) {
 
 export default function Login({ onLogin }) {
   const [tab, setTab] = useState("login");
-  const [form, setForm] = useState({ regno: "", password: "", confirmPassword: "", name: "", sem: "5", email: "", uniEmail: "", passkey: "" });
+  const [form, setForm] = useState({ regno: "", password: "", confirmPassword: "", name: "", sem: "5", email: "", uniEmail: "" });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -56,70 +56,42 @@ export default function Login({ onLogin }) {
       }
     }
 
-    if (tab === "admin") {
-      if (!form.regno || !form.password) { setError("Please fill all required fields."); return; }
-      if (!form.passkey) { setError("Security passkey is required for admin login."); return; }
-      if (form.passkey !== "CUJ@CSE2025") { setError("Invalid security passkey. Please contact HOD or IT Cell."); return; }
-    }
-
     setLoading(true);
 
-try {
-  if (tab === "login") {
-    const response = await loginUser({
-      rollNumber: form.regno,
-      password: form.password,
-    });
+    try {
+      if (tab === "login") {
+        const response = await loginUser({
+          rollNumber: form.regno,
+          password: form.password,
+        });
 
-    localStorage.setItem(
-      "token",
-      response.data.data.token
-    );
+        localStorage.setItem("token", response.data.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.data.user));
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(response.data.data.user)
-    );
+        onLogin();
+      }
 
-    onLogin();
-  }
-// REGISTER
-  if (tab === "register") {
-    const response = await registerUser({
-      name: form.name,
-      email: form.email,
-      password: form.password,
-      rollNumber: form.regno,
-      semester: form.sem,
-    });
+      if (tab === "register") {
+        const response = await registerUser({
+          name: form.name,
+          email: form.email,
+          password: form.password,
+          rollNumber: form.regno,
+          semester: form.sem,
+        });
 
-    localStorage.setItem("token", response.data.data.token);
+        localStorage.setItem("token", response.data.data.token);
+        localStorage.setItem("user", JSON.stringify(response.data.data.user));
 
-    localStorage.setItem(
-      "user",
-      JSON.stringify(response.data.data.user)
-    );
+        onLogin();
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Something went wrong.");
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    onLogin();
-  }
-
-  // Keep the current admin login
-  if (tab === "admin") {
-    onLogin();
-  }
-
-  // Register integration will be added later
-
-} catch (error) {
-  setError(
-    error.response?.data?.message ||
-      (tab === "register"
-        ? "Registration failed. Please try again."
-        : "Login failed. Please check your credentials.")
-  );
-} finally {
-  setLoading(false);
-}};
   return (
     <div className="min-h-screen bg-[#fbf7ec] flex flex-col items-center justify-center px-4 relative overflow-hidden">
 
@@ -156,11 +128,11 @@ try {
 
           {/* Tabs */}
           <div className="flex gap-0.5 bg-[#ece4c8] rounded-xl p-1 mb-6">
-            {["login","register","admin"].map(t => (
-              <button key={t} onClick={() => { setTab(t); setError(""); }}
+            {["login","register"].map(t => (
+              <button key={t} type="button" onClick={() => { setTab(t); setError(""); }}
                 className={`flex-1 py-2 rounded-lg text-xs font-semibold capitalize transition-all cursor-pointer border-0
                   ${tab === t ? "bg-[#fbf7ec] text-[#1a2540] shadow shadow-black/10" : "bg-transparent text-[#5a6a85] hover:text-[#1a2540]"}`}>
-                {t === "login" ? "Sign In" : t === "register" ? "Register" : "Admin"}
+                {t === "login" ? "Sign In" : "Register"}
               </button>
             ))}
           </div>
@@ -176,32 +148,22 @@ try {
             )}
 
             {/* Registration number — shown on login + register */}
-            {(tab === "login" || tab === "register") && (
-              <div className="grid grid-cols-2 gap-3">
-                <div className={tab === "login" ? "col-span-2" : ""}>
-                  <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">Registration number</label>
-                  <input name="regno" value={form.regno} onChange={handle} placeholder="23CUCSE001"
-                    className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-blue-500/50 transition-colors" />
-                </div>
-                {tab === "register" && (
-                  <div>
-                    <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">Semester</label>
-                    <select name="sem" value={form.sem} onChange={handle}
-                      className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] outline-none focus:border-blue-500/50 transition-colors cursor-pointer">
-                      {[1,2,3,4,5,6,7,8].map(s => <option key={s}>{s}</option>)}
-                    </select>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {tab === "admin" && (
-              <div>
-                <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">Admin ID</label>
-                <input name="regno" value={form.regno} onChange={handle} placeholder="ADMIN001"
+            <div className="grid grid-cols-2 gap-3">
+              <div className={tab === "login" ? "col-span-2" : ""}>
+                <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">Registration number</label>
+                <input name="regno" value={form.regno} onChange={handle} placeholder="23CUCSE001"
                   className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-blue-500/50 transition-colors" />
               </div>
-            )}
+              {tab === "register" && (
+                <div>
+                  <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">Semester</label>
+                  <select name="sem" value={form.sem} onChange={handle}
+                    className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] outline-none focus:border-blue-500/50 transition-colors cursor-pointer">
+                    {[1,2,3,4,5,6,7,8].map(s => <option key={s}>{s}</option>)}
+                  </select>
+                </div>
+              )}
+            </div>
 
             <div>
               <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">
@@ -241,24 +203,11 @@ try {
                   University email <span className="text-[#5a6a85]/70 font-normal">(optional — add later if not issued yet)</span>
                 </label>
                 <input name="uniEmail" type="email" value={form.uniEmail} onChange={handle}
-                  placeholder="firstname.rollnumber@cuj.ac.in"
+                  placeholder={expectedUniEmailPlaceholder(form.name, form.regno)}
                   className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-blue-500/50 transition-colors" />
                 <p className="text-[10px] text-[#5a6a85] mt-1">
-                  Format: firstname.rollnumber@cuj.ac.in
+                  Format: firstname.regno@cuj.ac.in — must match your name and registration number above.
                 </p>
-              </div>
-            )}
-
-            {tab === "admin" && (
-              <div>
-                <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">
-                  Security passkey <span className="text-red-400">*</span>
-                </label>
-                <input name="passkey" type="password" value={form.passkey} onChange={handle} placeholder="Enter admin security passkey"
-                  className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-blue-500/50 transition-colors" />
-                <div className="mt-1.5 bg-yellow-50 border border-yellow-300 rounded-lg px-3 py-2 text-[11px] text-yellow-800">
-                  ⚠️ Default passkey: <strong>CUJ@CSE2025</strong> — contact HOD or IT Cell to change it.
-                </div>
               </div>
             )}
 
@@ -280,18 +229,16 @@ try {
               {loading ? (
                 <span className="flex items-center justify-center gap-2">
                   <span className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin inline-block" />
-                  {tab === "login" ? "Signing in…" : tab === "register" ? "Creating account…" : "Verifying…"}
+                  {tab === "login" ? "Signing in…" : "Creating account…"}
                 </span>
-              ) : tab === "login" ? "Sign in to platform" : tab === "register" ? "Create account" : "Admin sign in"}
+              ) : tab === "login" ? "Sign in to platform" : "Create account"}
             </button>
           </form>
         </div>
 
         {/* Footer note */}
         <p className="text-center text-[11px] text-[#5a6a85] mt-5 leading-relaxed">
-          {tab === "admin"
-            ? <>Admin access is restricted. Unauthorized login attempts are logged.</>
-            : <>New here? Register with your Registration Number and Gmail address to get started.</>}
+          New here? Register with your Registration Number and Gmail address to get started.
         </p>
       </div>
     </div>

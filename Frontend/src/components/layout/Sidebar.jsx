@@ -17,7 +17,12 @@ const NAV = [
   ]},
 ];
 
+// Admins lose access to these two pages only — everything else stays.
+const ADMIN_HIDDEN = ["dashboard", "projects"];
+
 export default function Sidebar({ activePage, onNavigate, userRole }) {
+  const isAdmin = userRole === "admin";
+
   return (
     <aside className="w-[230px] bg-gradient-to-b from-green-50 via-green-100/60 to-yellow-50 border-r-2 border-yellow-200 flex flex-col gap-0.5 px-2.5 py-4 overflow-y-auto shrink-0">
 
@@ -30,24 +35,29 @@ export default function Sidebar({ activePage, onNavigate, userRole }) {
         </div>
       </div>
 
-      {NAV.map(({ section, items }) => (
-        <div key={section}>
-          <p className="text-[10px] font-bold text-green-700/80 uppercase tracking-widest px-2.5 pt-3 pb-1.5">{section}</p>
-          {items.map(({ id, label, icon, badge, badgeClass }) => (
-            <button key={id} onClick={() => onNavigate(id)}
-              className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-all cursor-pointer border-0
-                ${activePage === id
-                  ? "bg-blue-500 text-white shadow-sm shadow-blue-500/30"
-                  : "text-blue-900/80 hover:bg-yellow-100 hover:text-blue-900"}`}>
-              <span className="w-5 text-center">{icon}</span>
-              <span className="flex-1 text-left font-medium">{label}</span>
-              {badge && <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${badgeClass}`}>{badge}</span>}
-            </button>
-          ))}
-        </div>
-      ))}
+      {NAV.map(({ section, items }) => {
+        const visibleItems = isAdmin ? items.filter((i) => !ADMIN_HIDDEN.includes(i.id)) : items;
+        if (visibleItems.length === 0) return null;
 
-      {userRole === "admin" && (
+        return (
+          <div key={section}>
+            <p className="text-[10px] font-bold text-green-700/80 uppercase tracking-widest px-2.5 pt-3 pb-1.5">{section}</p>
+            {visibleItems.map(({ id, label, icon, badge, badgeClass }) => (
+              <button key={id} onClick={() => onNavigate(id)}
+                className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-all cursor-pointer border-0
+                  ${activePage === id
+                    ? "bg-blue-500 text-white shadow-sm shadow-blue-500/30"
+                    : "text-blue-900/80 hover:bg-yellow-100 hover:text-blue-900"}`}>
+                <span className="w-5 text-center">{icon}</span>
+                <span className="flex-1 text-left font-medium">{label}</span>
+                {badge && <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-semibold ${badgeClass}`}>{badge}</span>}
+              </button>
+            ))}
+          </div>
+        );
+      })}
+
+      {isAdmin && (
         <div className="mt-auto pt-3 border-t-2 border-yellow-200">
           <button onClick={() => onNavigate("admin")}
             className={`w-full flex items-center gap-2.5 px-2.5 py-2 rounded-lg text-sm transition-all cursor-pointer border-0
