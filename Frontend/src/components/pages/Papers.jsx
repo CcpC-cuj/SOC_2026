@@ -3,6 +3,100 @@ import { Card, Pill, Btn, SectionTitle, TabBar, StatCard, PageWrap, Select } fro
 import { getAllPyqs } from "../../api/pyq";
 import UploadPyqModal from "../UploadPyqModel";
 
+const SUBJECTS = [
+  "Physics – I",
+  "Physics-I Lab",
+  "Mathematics-I",
+  "Basics Electrical Engineering",
+  "Basics Electrical Engineering Lab",
+  "Engineering Graphics & Design",
+  "Communicative English",
+  "Design Thinking",
+  "Chemistry – I",
+  "Chemistry - I Lab",
+  "Mathematics-II",
+  "Biology for Engineers",
+  "Programming for Problem Solving",
+  "Programming for Problem Solving Lab",
+  "Workshop Manufacturing Practices",
+  "Universal Human Values –II",
+  "NSS/NCC",
+  "Digital Electronics",
+  "Engineering Mechanics",
+  "Engineering Mechanics Lab",
+  "Digital Electronics Lab",
+  "Mathematics-III (Probability and Statistics)",
+  "Data Structure & Algorithms",
+  "Data Structure & Algorithms Lab",
+  "Object Oriented Programming with C++",
+  "Object Oriented Programming with C++ Lab",
+  "Disaster Management",
+  "Design & Analysis of Algorithms",
+  "Design & Analysis of Algorithms Lab",
+  "Computer Organization & Architecture",
+  "Discrete Mathematical Structure",
+  "Operating Systems",
+  "Operating Systems Lab",
+  "Environmental Sciences",
+  "Computer Graphics",
+  "Project Management Techniques",
+  "Basic of Renewable Energy Resource",
+  "Fundamentals of Materials Science and Engineering",
+  "Introduction to Data Structure",
+  "Introduction to Database Management Systems",
+  "Introduction to Database Management Systems Lab",
+  "Programming with Python",
+  "Programming with Python Lab",
+  "Theory of Computation",
+  "Computer Networks",
+  "Engineering Economics",
+  "Introductory Cyber Security",
+  "Remote Sensing and GIS in Engineering",
+  "Basics of Solar Energy Engineering",
+  "Fundamental of Nanoscience and Technology",
+  "AI Foundation and Applications",
+  "Introduction to Artificial Intelligence",
+  "Compiler Design",
+  "Data Mining: Concepts and Techniques",
+  "Software Engineering",
+  "System Analysis and Design",
+  "Software Project Management",
+  "Mobile Computing",
+  "Information Extraction and Retrieval",
+  "Blockchain and Cryptocurrency Technologies",
+  "Web Technology",
+  "Web Technology Lab",
+  "Network and System Security",
+  "Watershed Management",
+  "Basic of Fuel Cell and Hydrogen Energy",
+  "Fundamentals of Materials Characterization Techniques",
+  "Introduction to Machine Learning",
+  "Machine Learning",
+  "Introduction to Data Analytics using Python",
+  "Principles of Cloud Computing",
+  "Next Generation Networks",
+  "Introduction to Industry 4.0",
+  "Internet of Things",
+  "Nature Inspired Computing for Data Science",
+  "Introduction to Cryptography",
+  "Distributed Systems",
+  "Engineering Project – I",
+  "Summer Internship",
+  "Knowledge Representation and Reasoning",
+  "Parallel Algorithms",
+  "Soft Computing",
+  "Quantum Computing",
+  "Virtual and Augmented Reality",
+  "Engineering Project – II",
+  "Big Data Analytics",
+  "Artificial Neural Network",
+  "Deep Learning",
+  "Natural Language Processing",
+  "Research Methodology and Intellectual Property Rights",
+  "Dissertation I",
+  "Dissertation II",
+];
+
 const TOPICS = [
   { name: "Dynamic programming", count: 22, pct: 90, hot: true, color: "bg-blue-500/55" },
   { name: "Trees & BST", count: 19, pct: 77, hot: true, color: "bg-blue-500/50" },
@@ -19,14 +113,6 @@ const PREDICTIONS = [
   { icon: "📈", bg: "bg-blue-500/12", name: "Graph — Dijkstra & Bellman-Ford", note: "4 consecutive years · alternates question type", conf: 80, confColor: "bg-blue-400" },
   { icon: "🌿", bg: "bg-emerald-500/10", name: "AVL tree rotations & B-tree ops", note: "10–15 mark question · 3 of last 4 years", conf: 72, confColor: "bg-emerald-400" },
   { icon: "📷", bg: "bg-teal-500/10", name: "Hashing — collision resolution", note: "Skipped last year · high recurrence pattern", conf: 65, confColor: "bg-teal-400" },
-];
-
-const BRANCHES = [
-    "All Branches",
-    "CSE",
-    "EE",
-    "MME",
-    "CE",
 ];
 
 function PaperRow({ paper, onNavigate }) {
@@ -54,7 +140,8 @@ function Analyser({ onNavigate }) {
   return (
     <div>
       <div className="flex gap-2 items-center mb-4 flex-wrap">
-        <Select options={["Data Structures","OS","DBMS","CN","ML"]} />
+        
+        <Select options={SUBJECTS} />
         <Select options={["Sem 5","Sem 4","Sem 3"]} />
         <span className="text-xs text-[#5a6a85]">47 papers analysed · 2019–2024</span>
       </div>
@@ -114,21 +201,16 @@ function Analyser({ onNavigate }) {
   );
 }
 
-function UploadModal({ onClose, onUploaded }){
-  const [showUpload, setShowUpload] = useState(false);
-}
-
 export default function Papers({ onNavigate }) {
   const [tab, setTab] = useState("Browse papers");
   const [pyqs, setPyqs] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filters, setFilters] = useState({
-      search: "",
-      semester: "",
-      branch: "",
-      year: "",
-      examType: "",
-  });
+  search: "",
+  subject: "",
+  semester: "",
+  examType: "",
+});
   const [showUpload, setShowUpload] = useState(false);
 
   useEffect(() => {
@@ -158,18 +240,27 @@ export default function Papers({ onNavigate }) {
           <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
 
             <div className="flex flex-wrap gap-2">
+              <input
+  type="text"
+  placeholder="🔍 Search papers..."
+  value={filters.search}
+  onChange={(e) =>
+    setFilters((prev) => ({
+      ...prev,
+      search: e.target.value,
+    }))
+  }
+  className="px-3 py-2 rounded-lg border border-black/10 bg-[#f5efdc] text-sm outline-none w-64"
+/>
 
-                <input
-                    type="text"
-                    placeholder="🔍 Search subject or faculty..."
-                    value={filters.search}
-                    onChange={(e) =>
+                <Select
+                    options={["All Subjects", ...SUBJECTS]}
+                    onChange={(val) =>
                         setFilters((prev) => ({
                             ...prev,
-                            search: e.target.value,
+                            subject: val === "All Subjects" ? "" : val,
                         }))
                     }
-                    className="px-3 py-2 rounded-lg border border-black/10 bg-[#f5efdc] text-sm outline-none w-64"
                 />
 
                 <Select
@@ -183,6 +274,8 @@ export default function Papers({ onNavigate }) {
                         "Sem 6",
                         "Sem 7",
                         "Sem 8",
+                        "Sem 9",
+                        "Sem 10",
                     ]}
                     onChange={(val) =>
                         setFilters((prev) => ({
@@ -196,42 +289,12 @@ export default function Papers({ onNavigate }) {
                 />
 
                 <Select
-                  value={filters.branch}
-                  options={BRANCHES}
-                  onChange={(val) =>
-                      setFilters((prev) => ({
-                          ...prev,
-                          branch: val === "All Branches" ? "" : val,
-                      }))
-                  }
-                />
-
-                <Select
-                    options={[
-                        "All years",
-                        "2026",
-                        "2025",
-                        "2024",
-                        "2023",
-                        "2022",
-                        "2021",
-                    ]}
-                    onChange={(val) =>
-                        setFilters((prev) => ({
-                            ...prev,
-                            year: val === "All years" ? "" : val,
-                        }))
-                    }
-                />
-
-                <Select
                     options={[
                         "All types",
                         "end-sem",
                         "sessional",
                     ]}
-                    onChange={(val) =>{
-                      console.log(val);
+                    onChange={(val) =>
                         setFilters((prev) => ({
                             ...prev,
                             examType:
@@ -239,7 +302,6 @@ export default function Papers({ onNavigate }) {
                                     ? ""
                                     : val,
                         }))
-                      }
                     }
                 />
 
@@ -248,10 +310,8 @@ export default function Papers({ onNavigate }) {
                     size="sm"
                     onClick={() =>
                         setFilters({
-                            search: "",
+                            subject: "",
                             semester: "",
-                            branch: "",
-                            year: "",
                             examType: "",
                         })
                     }
@@ -283,14 +343,14 @@ export default function Papers({ onNavigate }) {
       )}
 
       {showUpload && (
-    <UploadPyqModal
-        onClose={() => setShowUpload(false)}
-        onSuccess={() => {
-            setShowUpload(false);
-            fetchPyqs();
-        }}
-    />
-)}
+        <UploadPyqModal
+            onClose={() => setShowUpload(false)}
+            onSuccess={() => {
+                setShowUpload(false);
+                fetchPyqs();
+            }}
+        />
+      )}
     </PageWrap>
   );
 }
