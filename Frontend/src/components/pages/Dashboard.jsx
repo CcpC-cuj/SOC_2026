@@ -63,7 +63,7 @@ export default function Dashboard({ onNavigate }) {
           </h2>
 
           <p className="text-sm text-[#5a6a85] mt-0.5">
-            Semester {user.semester || "-"} · 3 new resources uploaded today
+            Semester {user.semester || "-"}
           </p>
         </div>
 

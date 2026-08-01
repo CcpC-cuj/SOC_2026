@@ -14,7 +14,6 @@ const updateProfile = async(userId, profileData)=>{
         const {
             name,
             bio,
-            branch,
             semester,
             skills,
             achievements,
@@ -26,7 +25,6 @@ const updateProfile = async(userId, profileData)=>{
         const updateData = {//To not allow user to update password and email
             name,
             bio,
-            branch,
             semester,
             skills,
             achievements,
