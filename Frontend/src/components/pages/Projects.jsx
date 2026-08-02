@@ -185,30 +185,30 @@ export default function Projects({ onNavigate, user }) {
 
     try {
 
-        setRejecting(prev => ({
-            ...prev,
-            [userId]: true
-        }));
+      setRejecting(prev => ({
+        ...prev,
+        [userId]: true
+      }));
 
-        await rejectRequest(projectId, userId);
+      await rejectRequest(projectId, userId);
 
-        await fetchProjects();
-        await fetchPendingRequests();
+      await fetchProjects();
+      await fetchPendingRequests();
 
     } catch (err) {
 
-        console.log(err);
+      console.log(err);
 
     } finally {
 
-        setRejecting(prev => ({
-            ...prev,
-            [userId]: false
-        }));
+      setRejecting(prev => ({
+        ...prev,
+        [userId]: false
+      }));
 
     }
 
-};
+  };
 
   if (loading) {
 
@@ -440,24 +440,22 @@ export default function Projects({ onNavigate, user }) {
                             onClick={() => handleApprove(project._id, user._id)}
                             disabled={approving[user._id]}
                             className={`px-3 py-1 rounded-lg text-white ${approving[user._id]
-                                ? "bg-gray-400 cursor-not-allowed"
-                                : "bg-green-600 hover:bg-green-700"
+                              ? "bg-gray-400 cursor-not-allowed"
+                              : "bg-green-600 hover:bg-green-700"
                               }`}
                           >
                             {approving[user._id] ? "Approving..." : "Approve"}
                           </button>
 
                           <button
-                            onClick={() =>
-                              handleReject(project._id, pendingUser._id)
-                            }
-                            disabled={rejecting[pendingUser._id]}
-                            className={`px-3 py-1 rounded-lg text-white transition ${rejecting[pendingUser._id]
+                            onClick={() => handleReject(project._id, user._id)}
+                            disabled={rejecting[user._id]}
+                            className={`px-3 py-1 rounded-lg text-white transition ${rejecting[user._id]
                                 ? "bg-gray-400 cursor-not-allowed"
                                 : "bg-red-500 hover:bg-red-600"
                               }`}
                           >
-                            {rejecting[pendingUser._id]
+                            {rejecting[user._id]
                               ? "Rejecting..."
                               : "Reject"}
                           </button>
