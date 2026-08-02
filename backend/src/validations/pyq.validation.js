@@ -2,11 +2,6 @@ const { z } = require("zod");
 
 const createPyqSchema = z.object({
 
-    title: z
-        .string()
-        .trim()
-        .min(3, "Title must be at least 3 characters").optional(),
-
     subject: z
         .string()
         .trim()
@@ -16,13 +11,7 @@ const createPyqSchema = z.object({
         .number()
         .int()
         .min(1, "Semester must be between 1 and 8")
-        .max(8, "Semester must be between 1 and 8"),
-
-    branch: z
-        .string()
-        .trim()
-        .toUpperCase()
-        .min(2, "Branch is required"),
+        .max(10, "Semester must be between 1 and 10"),
 
     year: z.coerce
         .number()

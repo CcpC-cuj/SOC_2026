@@ -19,15 +19,8 @@ const pyqSchema = new mongoose.Schema(
         required: true
     },
 
-    branch: {
-        type: String,
-        required: true,
-        uppercase: true
-    },
-
     year: {
         type: Number,
-        required: true
     },
 
     examType: {

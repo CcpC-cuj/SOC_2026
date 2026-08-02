@@ -13,14 +13,10 @@ z.object({
         .max(500)
         .optional(),
 
-    branch:
-        z.string()
-        .optional(),
-
     semester:
         z.coerce.number()
         .min(1)
-        .max(8)
+        .max(10)
         .optional(),
 
     github:

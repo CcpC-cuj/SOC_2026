@@ -47,11 +47,6 @@ const userSchema = new mongoose.Schema(
             default:""
         },
 
-        branch:{
-            type:String,
-            default:""
-        },
-
         semester:{
             type:Number,
             required: true

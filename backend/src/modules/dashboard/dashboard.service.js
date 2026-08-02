@@ -45,7 +45,7 @@ const getDashboard = async (userId) => {
 
     ]);
 
-    console.log(user);
+    //console.log(user);
 
     return{
         profile: user,

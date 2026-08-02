@@ -17,7 +17,7 @@ const createResourceSchema = z.object({
     semester: z
         .number()
         .min(1)
-        .max(8),
+        .max(10),
 
     resourceType: z.enum([
         "notes",

@@ -75,10 +75,6 @@ const getAllPyqs = async (query) => {
         filter.semester = Number(query.semester);
     }
 
-    if (query.branch) {
-        filter.branch = query.branch.toUpperCase();
-    }
-
     if (query.year) {
         filter.year = Number(query.year);
     }

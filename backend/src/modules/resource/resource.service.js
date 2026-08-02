@@ -18,7 +18,7 @@ const createResource = async(resourceData, file, userId) =>{
             "soc/resources",
             "raw"
         );
-        console.log(uploadResult);
+        //console.log(uploadResult);
     
         const resource = await Resource.create({
             ...resourceData, 
