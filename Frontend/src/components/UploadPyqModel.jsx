@@ -2,7 +2,7 @@ import { useState } from "react";
 import { uploadPyq } from "../api/pyq";
 import { Btn } from "./ui";
 
-const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8];
+const SEMESTERS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10];
 const EXAM_TYPES = ["end-sem", "sessional"];
 
 export default function UploadPyqModal({ onClose, onSuccess }) {
@@ -10,7 +10,6 @@ export default function UploadPyqModal({ onClose, onSuccess }) {
     title: "",
     subject: "",
     semester: 3,
-    branch: "CSE",
     year: new Date().getFullYear(),
     examType: "end-sem",
     facultyName: "",
@@ -65,7 +64,6 @@ export default function UploadPyqModal({ onClose, onSuccess }) {
       formData.append("title", form.title);
       formData.append("subject", form.subject);
       formData.append("semester", form.semester);
-      formData.append("branch", form.branch);
       formData.append("year", form.year);
       formData.append("examType", form.examType);
       formData.append("facultyName", form.facultyName);
@@ -176,22 +174,6 @@ export default function UploadPyqModal({ onClose, onSuccess }) {
           {/* Branch + Year */}
 
           <div className="mb-4 grid grid-cols-2 gap-4">
-
-            <div>
-
-              <label className="mb-2 block text-sm font-medium">
-                Branch
-              </label>
-
-              <input
-                name="branch"
-                value={form.branch}
-                onChange={handleChange}
-                className="w-full rounded-lg border border-black/10 bg-[#ece4c8] px-3 py-2"
-              />
-
-            </div>
-
             <div>
 
               <label className="mb-2 block text-sm font-medium">

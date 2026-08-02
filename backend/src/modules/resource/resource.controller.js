@@ -26,10 +26,8 @@ const getAllResources = asyncHandler(async(req, res)=>{
     const resourceType =req.query.resourceType || "";
     const faculty = req.query.faculty || "";
 
-    const {resources, totalResources} = await resourceService
+    const {resources} = await resourceService
     .getAllResources({page, limit, search, subject, semester, resourceType, faculty});
-
-    const totalPages = Math.ceil(totalResources/limit);
 
     res.status(200).json(
         new ApiResponse(200, "Resource fetched successfully",{
@@ -47,33 +45,6 @@ const getResourceById = asyncHandler(async(req, res)=>{
     );
 });
 
-const approveResource = asyncHandler(async(req, res)=>{
-
-    const resource = await resourceService.approveResource(req.params.id);
-
-    res.status(200).json(
-        new ApiResponse(200, "Resource approved", resource)
-    );
-});
-
-const deleteResource = asyncHandler(async(req, res)=>{
-
-    await resourceService.deleteResource(req.params.id);
-
-    res.status(200).json(
-        new ApiResponse(200, "Resource deleted successfully")
-    );
-});
-
-const getPendingResources = asyncHandler(async(req, res)=>{
-
-    const resources = await resourceService.getPendingResources();
-
-    res.status(200).json(
-        new ApiResponse(200, "Fetched Successfully", resources)
-    );
-});
-
 const getMyRecentResources = asyncHandler(async (req, res) => {
     const resources = await resourceService.getMyRecentResources(req.user.id);
 
@@ -88,8 +59,5 @@ module.exports = {
     createResource,
     getAllResources,
     getResourceById,
-    approveResource,
-    deleteResource,
-    getPendingResources,
     getMyRecentResources
 };

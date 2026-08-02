@@ -66,56 +66,9 @@ const getPyqById = asyncHandler(async (req, res) => {
 
 });
 
-const getPendingPyqs = asyncHandler(async (req, res) => {
-
-    const pyqs = await pyqService.getPendingPyqs();
-
-    res.status(200).json(
-        new ApiResponse(
-            200,
-            "Pending PYQs fetched successfully",
-            pyqs
-        )
-    );
-
-});
-
-const approvePyq = asyncHandler(async (req, res) => {
-
-    const pyq = await pyqService.approvePyq(
-        req.params.id
-    );
-
-    res.status(200).json(
-        new ApiResponse(
-            200,
-            "PYQ approved successfully",
-            pyq
-        )
-    );
-
-});
-
-const deletePyq = asyncHandler(async (req, res) => {
-
-    await pyqService.deletePyq(
-        req.params.id
-    );
-
-    res.status(200).json(
-        new ApiResponse(
-            200,
-            "PYQ deleted successfully"
-        )
-    );
-
-});
 
 module.exports = {
     uploadPyq,
     getAllPyqs,
     getPyqById,
-    getPendingPyqs,
-    approvePyq,
-    deletePyq
 };

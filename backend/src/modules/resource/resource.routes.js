@@ -14,18 +14,9 @@ const resourceController = require("./resource.controller");
 //GET
 router.get("/", resourceController.getAllResources);
 router.get("/my/recent",authMiddleware, resourceController.getMyRecentResources);
-router.get("/pending", authMiddleware
-    , authorize("admin"), resourceController.getPendingResources);
-
 
 //POST
 router.post("/", authMiddleware, upload.single("file"), resourceController.createResource);
-
-//PATCH
-router.patch("/:id/approve",authMiddleware, authorize("admin"),resourceController.approveResource);
-
-//DELETE
-router.delete("/:id",authMiddleware, authorize("admin"), resourceController.deleteResource);
 
 router.get("/:id", resourceController.getResourceById);
 

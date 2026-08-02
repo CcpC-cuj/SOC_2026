@@ -23,7 +23,7 @@ function matches(text, q) {
   return text.toLowerCase().includes(q);
 }
 
-export default function Header({ onNavigate, onLogout, userRole }) {
+export default function Header({ onNavigate, onLogout, userRole, user }) {
   const [query, setQuery] = useState("");
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
@@ -253,18 +253,35 @@ export default function Header({ onNavigate, onLogout, userRole }) {
                 className="w-full text-left px-4 py-2.5 text-sm text-[#1a2540] hover:bg-[#fbf7ec] cursor-pointer bg-transparent border-0">
                 Notification preferences
               </button>
-              <div className="border-t border-black/5" />
-              <button onClick={() => { onLogout(); setShowSettings(false); }}
-                className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 cursor-pointer bg-transparent border-0">
-                Sign out
-              </button>
-            </div>
-          )}
-        </div>
-
-        <button onClick={() => onNavigate("profile")}
-          className="w-8 h-8 rounded-full bg-gradient-to-br from-yellow-300 to-green-400 flex items-center justify-center text-xs font-bold text-blue-900 cursor-pointer border-0 ring-2 ring-white/40">
-          AK
+                      <div className="border-t border-black/5" />
+                      <button onClick={() => { onLogout(); setShowSettings(false); }}
+                        className="w-full text-left px-4 py-2.5 text-sm text-red-500 hover:bg-red-50 cursor-pointer bg-transparent border-0">
+                        Sign out
+                      </button>
+                    </div>
+                  )}
+                </div>
+                
+                <button
+            onClick={() => onNavigate("profile")}
+            className="w-8 h-8 rounded-full overflow-hidden ring-2 ring-white/40 border-0 cursor-pointer bg-white"
+        >
+            {user?.avatar ? (
+                <img
+                    src={user.avatar}
+                    alt={user.name}
+                    className="w-full h-full object-cover"
+                />
+            ) : (
+                <div className="w-full h-full bg-gradient-to-br from-yellow-300 to-green-400 flex items-center justify-center text-xs font-bold text-blue-900">
+                    {user?.name
+                        ?.split(" ")
+                        .map((n) => n[0])
+                        .join("")
+                        .slice(0, 2)
+                        .toUpperCase() || "U"}
+                </div>
+            )}
         </button>
         <button onClick={onLogout}
           className="text-xs text-yellow-200 hover:text-white transition-colors cursor-pointer bg-transparent border-0 ml-1">

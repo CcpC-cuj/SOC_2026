@@ -75,8 +75,8 @@ const getAllPyqs = async (query) => {
         filter.semester = Number(query.semester);
     }
 
-    if (query.year) {
-        filter.year = Number(query.year);
+    if (query.subject) {
+        filter.subject = query.subject;
     }
 
     if (query.examType) {
@@ -133,49 +133,9 @@ const getPyqById = async (pyqId) => {
 
 };
 
-const getPendingPyqs = async () => {
-
-    return await PYQ.find({ approved: false })
-        .populate("uploadedBy", "name email rollNumber")
-        .sort({ createdAt: -1 });
-
-};
-
-const approvePyq = async (pyqId) => {
-
-    const pyq = await PYQ.findById(pyqId);
-
-    if (!pyq) {
-        throw new ApiError(404, "PYQ not found");
-    }
-
-    pyq.approved = true;
-
-    await pyq.save();
-
-    return pyq;
-
-};
-
-const deletePyq = async (pyqId) => {
-
-    const pyq = await PYQ.findById(pyqId);
-
-    if (!pyq) {
-        throw new ApiError(404, "PYQ not found");
-    }
-
-    await pyq.deleteOne();
-
-    return;
-
-};
 
 module.exports = {
     uploadPyq,
     getAllPyqs,
     getPyqById,
-    getPendingPyqs,
-    approvePyq,
-    deletePyq
 };

@@ -51,6 +51,12 @@ const getAllResources = async({page=1, limit=10, search, subject, semester, reso
                 }
             },
             {
+                subject: {
+                    $regex: search,
+                    $options: "i"
+                }
+            },
+            {
                 description:{
                     $regex: search,
                     $options: "i"
@@ -88,6 +94,13 @@ const getAllResources = async({page=1, limit=10, search, subject, semester, reso
     .limit(limit)
     .lean();
 
+    console.log({
+    search,
+    subject,
+    semester,
+    resourceType
+});
+
     return {
         resources,
         pagination: {
@@ -122,43 +135,6 @@ const getResourceById = async(id)=>{
     return resource;
 };
 
-const approveResource = async(id)=>{
-    const resource = await Resource.findById(id);
-
-    if(!resource) {
-        throw new ApiError(404, "Resource not found!");
-    }
-
-    if (resource.approved) {
-        throw new ApiError(400, "Resource already approved!");
-    }
-
-    resource.approved = true;
-    await resource.save();
-    return resource;
-};
-
-const deleteResource = async(id)=>{
-
-    const resource = await Resource.findById(id);
-    if(!resource){
-        throw new ApiError(404, "Resource not found!");
-    }
-
-    await Resource.findByIdAndDelete(id);
-
-    return resource;
-}
-
-const getPendingResources = async()=>{
-
-    const resources = await Resource.find({
-        approved: false
-    }).populate("uploadedBy", "name email")
-    .sort({createdAt: -1});
-
-    return resources;
-}
 
 const getMyRecentResources = async (userId) => {
     return await Resource.find({
@@ -174,8 +150,5 @@ module.exports = {
     createResource,
     getAllResources,
     getResourceById,
-    approveResource,
-    deleteResource,
-    getPendingResources,
     getMyRecentResources
 };

@@ -1,45 +1,42 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import ProfileModal from "../ProfileModel";
+import {
+  getDashboard,
+  getPendingResources,
+  getPendingPyqs,
+  getAllResumes,
+  approveResource,
+  approvePyq,
+  deleteResource,
+  deletePyq,
+} from "../../api/admin";
+
 import { Card, Pill, Btn, SectionTitle, StatCard, TabBar, PageWrap } from "../ui";
 
-const PENDING = [
-  { title: "DBMS Complete Notes Unit 5", by: "Rahul K.", subject: "DBMS", subjectColor: "purple", type: "Notes", date: "Today" },
-  { title: "ML Lab Manual — All 12 Experiments", by: "Sneha M.", subject: "ML", subjectColor: "teal", type: "Lab", date: "Today" },
-  { title: "OS Mid Sem 2023 Question Paper", by: "Arjun J.", subject: "OS", subjectColor: "green", type: "PYQ", date: "Yesterday" },
-];
-
-const STUDENTS = [
-  { name: "Aryan Kumar", rollno: "23CUCSE001", sem: "5", resume: { fileName: "Aryan_Kumar_Resume.pdf", uploaded: "12 Jul 2026", size: "412 KB" } },
-  { name: "Rahul Kumar", rollno: "23CUCSE014", sem: "5", resume: { fileName: "Rahul_K_CV.pdf", uploaded: "08 Jul 2026", size: "380 KB" } },
-  { name: "Sneha Mehta", rollno: "23CUCSE022", sem: "5", resume: { fileName: "Sneha_Mehta_Resume.docx", uploaded: "02 Jul 2026", size: "290 KB" } },
-  { name: "Arjun Jha", rollno: "23CUCSE009", sem: "5", resume: null },
-  { name: "Priya Das", rollno: "23CUCSE031", sem: "5", resume: { fileName: "Priya_Das_Resume.pdf", uploaded: "15 Jun 2026", size: "455 KB" } },
-  { name: "Nikhil Kujur", rollno: "22CUCSE045", sem: "7", resume: null },
-];
-
 const UPLOAD_BARS = [40, 55, 35, 80, 65, 90, 70];
-const DAYS = ["M","T","W","T","F","S","S"];
+const DAYS = ["Mon","Tue","Wed","Thu","Fri","Sst","Sun"];
 const DOUBT_BARS = [90, 70, 55, 40, 30];
 const SUBJECTS = ["DS","OS","DBMS","CN","ML"];
 
-function ResumeSection() {
+function ResumeSection({students, onStudentClick}) {
   const [query, setQuery] = useState("");
   const [semFilter, setSemFilter] = useState("All");
 
   const sems = ["All", ...Array.from({ length: 10 }, (_, i) => String(i + 1))];
 
-  const filtered = STUDENTS.filter((s) => {
+  const filtered = students.filter((s) => {
     const q = query.trim().toLowerCase();
-    const matchesQuery = !q || s.name.toLowerCase().includes(q) || s.rollno.toLowerCase().includes(q);
-    const matchesSem = semFilter === "All" || s.sem === semFilter;
+    const matchesQuery = !q || s.name.toLowerCase().includes(q) || s.rollNumber.toLowerCase().includes(q);
+    const matchesSem = semFilter === "All" || s.semester === semFilter;
     return matchesQuery && matchesSem;
   });
 
-  const uploadedCount = STUDENTS.filter((s) => s.resume).length;
+  const uploadedCount = students.length;
 
   return (
     <Card>
       <div className="flex items-center justify-between mb-3 flex-wrap gap-2">
-        <SectionTitle>Student resumes ({uploadedCount}/{STUDENTS.length} uploaded)</SectionTitle>
+        <SectionTitle>Student resumes ({uploadedCount}/{students.length} uploaded)</SectionTitle>
         <div className="flex gap-2">
           <input
             value={query}
@@ -64,27 +61,58 @@ function ResumeSection() {
         </thead>
         <tbody>
           {filtered.map((s) => (
-            <tr key={s.rollno} className="border-b border-black/10 last:border-0 hover:bg-white/3 transition-colors">
-              <td className="py-2.5 px-2 pl-0 text-sm text-[#1a2540] font-medium">{s.name}</td>
-              <td className="py-2.5 px-2 text-sm text-[#5a6a85]">{s.rollno}</td>
-              <td className="py-2.5 px-2 text-sm text-[#5a6a85]">{s.sem}</td>
+            <tr key={s._id} className="border-b border-black/10 last:border-0 hover:bg-white/3 transition-colors">
+              <td className="py-2.5 px-2 pl-0">
+                <button
+                    onClick={() => onStudentClick(s)}
+                    className="flex items-center gap-3 text-left hover:bg-black/5 rounded-lg p-1 transition w-full"
+                >
+                      <img
+                          src={
+                              s.avatar ||
+                              "https://ui-avatars.com/api/?name=" +
+                                  encodeURIComponent(s.name)
+                          }
+                          alt={s.name}
+                          className="w-10 h-10 rounded-full object-cover border border-black/10"
+                      />
+
+                      <div>
+                          <div className="font-medium text-[#1a2540]">
+                              {s.name}
+                          </div>
+                        
+                          <div className="text-xs text-[#5a6a85]">
+                              Student
+                          </div>
+                      </div>
+                  </button>
+              </td>
+              <td className="py-2.5 px-2 text-sm text-[#5a6a85]">{s.rollNumber}</td>
+              <td className="py-2.5 px-2 text-sm text-[#5a6a85]">{s.semester}</td>
               <td className="py-2.5 px-2">
-                {s.resume ? (
+                {s.resumeUrl ? (
                   <div className="text-xs">
-                    <span className="text-[#1a2540]">{s.resume.fileName}</span>
-                    <span className="text-[#5a6a85]"> · {s.resume.size} · {s.resume.uploaded}</span>
+                    <span className="text-[#1a2540]">Resume Uploaded</span>
+                    <span className="text-[#5a6a85]"> {new Date(s.createdAt).toLocaleDateString()}</span>
                   </div>
                 ) : (
                   <Pill color="gray" className="text-[10px]">No resume uploaded</Pill>
                 )}
               </td>
               <td className="py-2.5 px-2">
-                {s.resume ? (
+                {s.resumeUrl ? (
                   <div className="flex gap-1.5">
-                    <button className="text-xs px-2.5 py-1 rounded-lg border border-blue-400/30 text-blue-500 bg-transparent hover:bg-blue-500/10 transition-colors cursor-pointer">
+                    <button
+                      onClick={() => window.open(s.resumeUrl, "_blank")}
+                      className="text-xs px-2.5 py-1 rounded-lg border border-blue-400/30 text-blue-500 bg-transparent hover:bg-blue-500/10 transition-colors cursor-pointer"
+                    >
                       👁️ Preview
                     </button>
-                    <button className="text-xs px-2.5 py-1 rounded-lg border border-emerald-500/30 text-emerald-500 bg-transparent hover:bg-emerald-500/10 transition-colors cursor-pointer">
+                    <button 
+                      onClick={() => window.open(s.resumeUrl, "_blank")}
+                      className="text-xs px-2.5 py-1 rounded-lg border border-emerald-500/30 text-emerald-500 bg-transparent hover:bg-emerald-500/10 transition-colors cursor-pointer"
+                    >
                       ⬇️ Download
                     </button>
                   </div>
@@ -105,15 +133,122 @@ function ResumeSection() {
 
 export default function Admin() {
   const [tab, setTab] = useState("Resources (8)");
-  const [dismissed, setDismissed] = useState({});
+
+  const [dashboard, setDashboard] = useState(null);
+  const [pendingResources, setPendingResources] = useState([]);
+  const [pendingPyqs, setPendingPyqs] = useState([]);
+  const [resumes, setResumes] = useState([]);
+
+  const [selectedItem, setSelectedItem] = useState(null);
+  const [selectedStudent, setSelectedStudent] = useState(null);
+
+
+  const fetchDashboard = async () => {
+    try {
+      const data = await getDashboard();
+      setDashboard(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchPendingResources = async () => {
+    try {
+      const data = await getPendingResources();
+      setPendingResources(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchPendingPyqs = async () => {
+    try {
+      const data = await getPendingPyqs();
+      setPendingPyqs(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const fetchResumes = async () => {
+    try {
+      const data = await getAllResumes();
+      setResumes(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleApprove = async (id) => {
+    try {
+      if (tab.startsWith("Resources")) {
+        await approveResource(id);
+        fetchPendingResources();
+      } else {
+        await approvePyq(id);
+        fetchPendingPyqs();
+      }
+
+      fetchDashboard();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  const handleDelete = async (id) => {
+    try {
+      if (tab.startsWith("Resources")) {
+        await deleteResource(id);
+        fetchPendingResources();
+      } else {
+        await deletePyq(id);
+        fetchPendingPyqs();
+      }
+
+      fetchDashboard();
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  useEffect(() => {
+    fetchDashboard();
+    fetchPendingResources();
+    fetchPendingPyqs();
+    fetchResumes();
+  }, []);
+
+  const pendingItems =
+  tab === "Resources (8)"
+    ? pendingResources
+    : pendingPyqs;
+
+  
 
   return (
     <PageWrap title="Admin Dashboard" subtitle="Moderate content, manage users, view analytics">
       <div className="grid grid-cols-4 gap-2.5 mb-5">
-        <StatCard value="12" label="Pending approvals" delta="Needs review" deltaColor="text-amber-400" />
-        <StatCard value="847" label="Total users" delta="↑ 23 this week" />
-        <StatCard value="1.2k" label="Resources uploaded" delta="↑ 47 this month" deltaColor="text-blue-400" />
-        <StatCard value="289" label="AI doubts today" delta="DS most queried" />
+        <StatCard
+            value={dashboard?.totalPendingApprovals || 0}
+            label="Pending approvals"
+            delta="Needs review"
+            deltaColor="text-amber-400"
+        />
+
+        <StatCard
+            value={dashboard?.totalUsers || 0}
+            label="Total users"
+        />
+
+        <StatCard
+            value={dashboard?.totalResources || 0}
+            label="Resources uploaded"
+        />
+
+        <StatCard
+            value={dashboard?.totalPyqs || 0}
+            label="PYQs uploaded"
+        />
       </div>
 
       {/* Analytics charts */}
@@ -155,38 +290,77 @@ export default function Admin() {
         <table className="w-full border-collapse">
           <thead>
             <tr>
-              {["Title","Uploaded by","Subject","Type","Date","Actions"].map((h) => (
+              {["Uploaded By","Title","Subject","Date","Actions"].map((h) => (
                 <th key={h} className="text-[11px] font-semibold text-[#5a6a85] uppercase tracking-wider pb-2 border-b border-black/10 text-left px-2 first:pl-0">{h}</th>
               ))}
             </tr>
           </thead>
           <tbody>
-            {PENDING.filter((_, i) => !dismissed[i]).map((row, i) => (
+            {pendingItems.map((row, i) => (
               <tr key={i} className="border-b border-black/10 last:border-0 hover:bg-white/3 transition-colors">
+                <td className="py-2.5 px-2">
+                    <button
+                      onClick={() => setSelectedStudent(row.uploadedBy)}
+                      className="flex items-center gap-2 text-left hover:bg-black/5 rounded-lg p-1 transition w-full">
+
+                      <div className="flex items-center gap-2">
+                        {row.uploadedBy?.avatar ? (
+                            <img
+                                src={row.uploadedBy.avatar}
+                                alt={row.uploadedBy.name}
+                                className="w-9 h-9 rounded-full object-cover border border-black/10"
+                            />
+                        ) : (
+                            <div className="w-9 h-9 rounded-full bg-[#d8ceb0] flex items-center justify-center text-xs font-semibold text-[#1a2540]">
+                                {row.uploadedBy?.name
+                                    ?.split(" ")
+                                    .map((n) => n[0])
+                                    .join("")
+                                    .slice(0, 2)}
+                            </div>
+                        )}
+
+                        <div>
+                            <div className="text-sm font-medium text-[#1a2540]">
+                                {row.uploadedBy?.name}
+                            </div>
+                      
+                            <div className="text-xs text-[#5a6a85]">
+                                {row.uploadedBy?.rollNumber}
+                            </div>
+                        </div>
+                      </div>
+                    </button>
+                </td>
                 <td className="py-2.5 px-2 pl-0 text-sm text-[#1a2540]">{row.title}</td>
-                <td className="py-2.5 px-2 text-sm text-[#5a6a85]">{row.by}</td>
-                <td className="py-2.5 px-2"><Pill color={row.subjectColor} className="text-[10px]">{row.subject}</Pill></td>
-                <td className="py-2.5 px-2 text-sm text-[#5a6a85]">{row.type}</td>
-                <td className="py-2.5 px-2 text-sm text-[#5a6a85]">{row.date}</td>
+                <td className="py-2.5 px-2"><Pill color="blue">{row.subject}</Pill></td>
+                <td className="py-2.5 px-2 text-sm text-[#5a6a85]">{new Date(row.createdAt).toLocaleDateString()}</td>
                 <td className="py-2.5 px-2">
                   <div className="flex gap-1.5">
                     <button
-                      onClick={() => setDismissed((d) => ({ ...d, [i]: true }))}
+                      onClick={() => handleApprove(row._id)}
                       className="text-xs px-2.5 py-1 rounded-lg border border-emerald-500/30 text-emerald-400 bg-transparent hover:bg-emerald-500/10 transition-colors cursor-pointer"
                     >
                       ✓ Approve
                     </button>
                     <button
-                      onClick={() => setDismissed((d) => ({ ...d, [i]: true }))}
+                      onClick={() => handleDelete(row._id)}
                       className="text-xs px-2.5 py-1 rounded-lg border border-red-500/30 text-red-400 bg-transparent hover:bg-red-500/10 transition-colors cursor-pointer"
                     >
                       ✕ Reject
+                    </button>
+
+                    <button
+                        onClick={() => window.open(row.fileUrl, "_blank")}
+                        className="text-xs px-2.5 py-1 rounded-lg border border-blue-400/30 text-blue-500 bg-transparent hover:bg-blue-500/10 transition-colors cursor-pointer"
+                    >
+                        👁 View
                     </button>
                   </div>
                 </td>
               </tr>
             ))}
-            {Object.keys(dismissed).length === PENDING.length && (
+            {pendingItems.length === 0 && (
               <tr><td colSpan={6} className="py-6 text-center text-sm text-[#5a6a85]">All caught up! No pending approvals.</td></tr>
             )}
           </tbody>
@@ -194,7 +368,18 @@ export default function Admin() {
       </Card>
 
       {/* Student resumes */}
-      <ResumeSection />
+      <ResumeSection
+          students={resumes}
+          onStudentClick={setSelectedStudent}
+      />
+
+      {selectedStudent && (
+        <ProfileModal
+          student={selectedStudent}
+          onClose={() => setSelectedStudent(null)}
+        />
+      )}
+
     </PageWrap>
   );
 }

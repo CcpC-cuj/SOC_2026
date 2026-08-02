@@ -24,27 +24,6 @@ router.post(
 );
 
 router.get(
-    "/pending",
-    authMiddleware,
-    authorize("admin"),
-    pyqController.getPendingPyqs
-);
-
-router.patch(
-    "/:id/approve",
-    authMiddleware,
-    authorize("admin"),
-    pyqController.approvePyq
-);
-
-router.delete(
-    "/:id",
-    authMiddleware,
-    authorize("admin"),
-    pyqController.deletePyq
-);
-
-router.get(
     "/:id",
     pyqController.getPyqById
 );

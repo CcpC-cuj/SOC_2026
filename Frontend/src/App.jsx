@@ -35,7 +35,6 @@ function getSavedUser() {
 export default function App() {
 
   const [user, setUser] = useState(() => getSavedUser());
-
   const [page, setPage] = useState(() => {
     const savedUser = getSavedUser();
     return savedUser?.role === "admin" ? "admin" : "dashboard";
@@ -72,6 +71,7 @@ export default function App() {
           setPage("dashboard");
         }}
         userRole={user.role}
+        user={user}
       />
       <div className="flex flex-1 overflow-hidden">
         <Sidebar activePage={effectivePage} onNavigate={setPage} userRole={user.role} />

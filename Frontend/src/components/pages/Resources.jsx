@@ -1,16 +1,13 @@
 import { useState, useEffect } from "react";
-import { Pill, Btn, FilterChips, PageWrap } from "../ui";
+import { Pill, Btn, Select, PageWrap } from "../ui";
 import { getResources } from "../../api/resources";
 import UploadResourceModal from "../UploadResourceModal";
-
-const SEM_FILTERS = ["All", "Sem 3", "Sem 4", "Sem 5", "Sem 6"];
-const TYPE_FILTERS = ["All", "Notes", "Assignment", "Lab", "Tutorial"];
 
 export default function Resources({ onNavigate }) {
   const [filters, setFilters] = useState({
       search: "",
       semester: "",
-      resourceType: "",
+      subject: "",
   });
 
   const [resources, setResources] = useState([]);
@@ -33,8 +30,8 @@ export default function Resources({ onNavigate }) {
         params.semester = Number(filters.semester);
     }
     
-    if (filters.resourceType) {
-        params.resourceType = filters.resourceType;
+    if (filters.subject) {
+        params.subject = filters.subject;
     }
 
     const data = await getResources(params);
@@ -67,7 +64,8 @@ export default function Resources({ onNavigate }) {
       }
     >
       {/* Search */}
-      <div className="flex gap-2.5 mb-3">
+      <div className="flex flex-wrap gap-2 mb-4">
+
         <input
             value={filters.search}
             onChange={(e) =>
@@ -76,10 +74,78 @@ export default function Resources({ onNavigate }) {
                     search: e.target.value,
                 }))
             }
-            placeholder="🔍 Search notes, subjects..."
-            className="bg-[#ece4c8] border border-black/10 rounded-lg px-3 py-2 text-sm text-[#1a2540] placeholder-[#5a6a85] outline-none focus:border-white/20 transition-colors w-72"
+            placeholder="🔍 Search title or faculty..."
+            className="bg-[#ece4c8] border border-black/10 rounded-lg px-3 py-2 text-sm w-64 outline-none"
         />
-      </div>
+    
+        <Select
+            value={filters.semester ? `Sem ${filters.semester}` : "All Semesters"}
+            options={[
+                "All Semesters",
+                "Sem 1",
+                "Sem 2",
+                "Sem 3",
+                "Sem 4",
+                "Sem 5",
+                "Sem 6",
+                "Sem 7",
+                "Sem 8",
+                "Sem 9",
+                "Sem 10",
+            ]}
+            onChange={(val) =>
+                setFilters((prev) => ({
+                    ...prev,
+                    semester: val === "All Semesters" ? "" : val.split(" ")[1],
+                }))
+            }
+        />
+
+        <Select
+            value={filters.subject || "All Subjects"}
+            options={[
+                "All Subjects",
+                "Data Structures",
+                "DBMS",
+                "Operating System",
+                "Computer Networks",
+                "OOP",
+                "Java",
+                "Python",
+                "Machine Learning",
+                "Artificial Intelligence",
+                "Software Engineering",
+                "Discrete Mathematics",
+                "Digital Electronics",
+            ]}
+            onChange={(val) =>{
+
+            console.log("Subject:", val);
+            
+              setFilters((prev) => ({
+                    ...prev,
+                    subject: val === "All Subjects" ? "" : val,
+                }))
+            }
+            }
+        />
+    
+        <Btn
+            variant="ghost"
+            size="sm"
+            onClick={() =>
+                setFilters({
+                    search: "",
+                    semester: "",
+                    subject: "",
+                    resourceType: "",
+                })
+            }
+        >
+            Clear
+        </Btn>
+          
+    </div>
 
       {/* Resources */}
 <div className="relative">
