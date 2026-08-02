@@ -7,11 +7,6 @@ import {
     createPost,
 } from "../../api/community";
 
-const COMMENTS = [
-  { initials: "RK", colorIndex: 0, name: "Rahul Kumar", sem: "Sem 6", text: "A process is an independent program in execution with its own memory space. A thread is the smallest unit of execution within a process, sharing the process's memory. Multiple threads communicate faster than inter-process communication.", votes: 31 },
-  { initials: "SM", colorIndex: 4, name: "Sneha Mishra", sem: "Sem 5", text: "Key difference: context switch between processes is heavy (saves full PCB) while between threads is lightweight (shared address space). Threads share heap but have separate stacks.", votes: 18 },
-];
-
 export default function Community({ onNavigate }) {
   const [posts, setPosts] = useState([]);
   const [activeThread, setActiveThread] = useState(null);
@@ -139,10 +134,17 @@ useEffect(() => {
         {/* Thread list */}
         <div>
           {posts.map((t) => (
-            <button
+            <div
               key={t._id}
               onClick={() => setActiveThread(t)}
-              className={`w-full text-left p-3 rounded-xl mb-1.5 border transition-all duration-150 cursor-pointer
+              role="button"
+              tabIndex={0}
+              onKeyDown={(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                      setActiveThread(t);
+                  }
+              }}
+                        className={`w-full text-left p-3 rounded-xl mb-1.5 border transition-all duration-150 cursor-pointer
                 ${activeThread?._id === t._id
                   ? "border-blue-500/40 bg-blue-500/5"
                   : "border-black/10 bg-[#f5efdc] hover:border-white/15"
@@ -207,7 +209,7 @@ useEffect(() => {
 
                 <span>{new Date(t.createdAt).toLocaleDateString()}</span>
               </div>
-            </button>
+            </div>
           ))}
         </div>
 

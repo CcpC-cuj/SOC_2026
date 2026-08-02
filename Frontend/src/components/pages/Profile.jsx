@@ -26,19 +26,6 @@ const ALL_SKILLS = [
   "Git/GitHub",
 ];
 
-const ACHIEVEMENT_ICONS = [
-  "🏆",
-  "⭐",
-  "📚",
-  "🎯",
-  "🥇",
-  "🚀",
-  "💡",
-  "🔥",
-  "🎓",
-  "📜",
-];
-
 const MYPROJECTS = [
   {
     icon: "🏆",
@@ -74,6 +61,8 @@ export default function Profile({ onNavigate }) {
 
   const [myResources, setMyResources] = useState([]);
 
+  const [uploadingResume, setUploadingResume] = useState(false);
+
   const fetchProfile = async () => {
       try {
         const res = await getProfile();
@@ -83,7 +72,6 @@ export default function Profile({ onNavigate }) {
         const profileData = {
           name: user.name || "",
           rollno: user.rollNumber || "",
-          programme: user.branch || "",
           sem: user.semester || "",
           batch: "",
           bio: user.bio || "",
@@ -131,7 +119,6 @@ export default function Profile({ onNavigate }) {
       const res = await updateProfile({
         name: draft.name,
         bio: draft.bio,
-        branch: draft.programme,
         semester: draft.sem,
         skills: draft.skills,
         achievements: draft.achievements,
@@ -244,6 +231,7 @@ export default function Profile({ onNavigate }) {
     if (!file) return;
 
     try {
+      setUploadingResume(true);
       const formData = new FormData();
 
       formData.append("resume", file);
@@ -264,6 +252,9 @@ export default function Profile({ onNavigate }) {
     } catch (err) {
       console.error(err);
       alert("Resume upload failed");
+    }
+    finally {
+      setUploadingResume(false);
     }
   };
 
@@ -459,13 +450,14 @@ export default function Profile({ onNavigate }) {
             {editing ? (
               <div className="grid grid-cols-2 gap-2 mt-3">
 
-                <input
-                  name="rollno"
-                  value={draft.rollno}
-                  onChange={handle}
-                  placeholder="Roll Number"
-                  className="bg-[#ece4c8] rounded-lg px-3 py-2"
-                />
+                <div className="bg-[#ece4c8] rounded-lg px-3 py-2 border border-black/10">
+                  <div className="text-[10px] text-[#5a6a85] uppercase tracking-wide">
+                    Roll Number
+                  </div>
+                  <div className="font-medium text-[#1a2540]">
+                    {draft.rollno}
+                  </div>
+                </div>
 
                 <select
                   name="sem"
@@ -619,9 +611,10 @@ export default function Profile({ onNavigate }) {
                 <>
                   <button
                     onClick={() => resumeInputRef.current?.click()}
-                    className="px-3 py-1 border rounded"
+                    disabled={uploadingResume}
+                    className="px-3 py-1 border rounded disabled:opacity-60 disabled:cursor-not-allowed"
                   >
-                    Replace
+                    {uploadingResume ? "Uploading..." : "Replace"}
                   </button>
 
                   <button
@@ -653,9 +646,10 @@ export default function Profile({ onNavigate }) {
 
               <button
                 onClick={() => resumeInputRef.current?.click()}
-                className="bg-blue-500 text-white px-3 py-2 rounded"
+                disabled={uploadingResume}
+                className="bg-blue-500 text-white px-3 py-2 rounded disabled:opacity-60 disabled:cursor-not-allowed"
               >
-                Upload Resume
+                {uploadingResume ? "Uploading..." : "Upload Resume"}
               </button>
 
             </div>

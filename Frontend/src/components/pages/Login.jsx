@@ -159,7 +159,7 @@ export default function Login({ onLogin }) {
                   <label className="text-[11px] text-[#5a6a85] mb-1.5 block font-medium">Semester</label>
                   <select name="sem" value={form.sem} onChange={handle}
                     className="w-full bg-[#ece4c8] border border-white/[0.07] rounded-lg px-3.5 py-2.5 text-sm text-[#1a2540] outline-none focus:border-blue-500/50 transition-colors cursor-pointer">
-                    {[1,2,3,4,5,6,7,8].map(s => <option key={s}>{s}</option>)}
+                    {[1,2,3,4,5,6,7,8,9,10].map(s => <option key={s}>{s}</option>)}
                   </select>
                 </div>
               )}

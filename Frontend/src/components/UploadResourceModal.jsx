@@ -3,7 +3,7 @@ import { uploadResource } from "../api/resources";
 import { Btn } from "./ui";
 
 const RESOURCE_TYPES = ["notes", "assignment", "lab", "tutorial"];
-const SEMESTERS = [1,2, 3, 4, 5, 6,7 ,8];
+const SEMESTERS = [1,2, 3, 4, 5, 6,7 ,8, 9, 10];
 
 export default function UploadResourceModal({ onClose, onSuccess }) {
   const [form, setForm] = useState({
