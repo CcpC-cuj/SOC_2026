@@ -21,8 +21,29 @@ const login = asyncHandler(async(req, res)=>{
     );
 });
 
+const sendRegistrationOtp = asyncHandler(async(req, res)=>{
+
+    await authService.sendRegisterOtp(req.body);
+    res.status(200).json(
+        new ApiResponse(200, "OTP sent successfully")
+    );
+
+});
+
+const verifyRegistrationOtp =asyncHandler(async(req, res)=>{
+    const {email, otp} = req.body;
+
+    const user = await authService.verifyRegistrationOtp(email, otp);
+    res.status(201).json(
+        new ApiResponse(201, "Registration successful", user)
+    );
+
+});
+
 
 module.exports = {
     register,
-    login
+    login,
+    sendRegistrationOtp,
+    verifyRegistrationOtp,
 };

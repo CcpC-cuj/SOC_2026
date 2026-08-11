@@ -45,7 +45,7 @@ const registerSchema = z.object({
     semester:
         z.coerce.number()
         .min(1)
-        .max(8),
+        .max(10),
 
 });
 
@@ -69,7 +69,69 @@ const loginSchema = z.object({
 
 });
 
+const sendRegistrationOtpSchema = z.object({
+
+    name: z
+        .string()
+        .trim()
+        .min(2, "Name is required"),
+
+    email: z
+        .string()
+        .trim()
+        .email("Invalid email"),
+
+    password: z
+        .string()
+        .min(6, "Password must be at least 6 characters"),
+
+    rollNumber: z
+        .string()
+        .regex(
+            /^CUJ\d{2}[A-Za-z]{2}\d{4}$/,
+            "Invalid roll number"
+        ),
+
+    collegeEmail: z
+        .union([
+            z.literal(""),
+            z.string()
+                .trim()
+                .email("Invalid email address")
+                .endsWith(
+                    "@cuj.ac.in",
+                    "College email must end with @cuj.ac.in"
+                )
+        ])
+        .optional(),
+
+    semester:
+        z.coerce.number()
+        .min(1)
+        .max(10),
+
+});
+
+const verifyRegistrationOtpSchema = z.object({
+
+    email: z
+        .string()
+        .trim()
+        .email("Invalid email"),
+
+    otp: z
+        .string()
+        .regex(
+            /^\d{6}$/,
+            "OTP must be 6 digits"
+        )
+
+});
+
+
 module.exports = {
     registerSchema,
-    loginSchema
+    loginSchema,
+    sendRegistrationOtpSchema,
+    verifyRegistrationOtpSchema,
 };
