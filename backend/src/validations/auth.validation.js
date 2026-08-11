@@ -87,11 +87,12 @@ const sendRegistrationOtpSchema = z.object({
 
     rollNumber: z
         .string()
+        .trim()
+        .toUpperCase()
         .regex(
-            /^CUJ\d{2}[A-Za-z]{2}\d{4}$/,
-            "Invalid roll number"
+            /^CUJ\d{2}[A-Z]{2}\d{4}$/,
+            "Roll number must be in the format CUJ23UG0001"
         ),
-
     collegeEmail: z
         .union([
             z.literal(""),

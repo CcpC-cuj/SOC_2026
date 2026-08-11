@@ -5,31 +5,6 @@ const bcrypt = require("bcryptjs");
 const OTP = require("./otp.model");
 const sendEmail = require("../../utils/sendEmail");
 
-const registerUser = async(userData)=>{
-    
-    const existingUser = await User.findOne({
-        email: userData.email
-    });
-
-    const existingRoll = await User.findOne({
-        rollNumber: userData.rollNumber
-    });
-
-    if(existingUser || existingRoll){
-        throw new ApiError(404, "User already exist");
-    }
-
-    const user = await User.create(userData);
-
-    const token = generateToken(user._id);
-
-    user.password = undefined;
-    return{
-        user,
-        token
-    };
-};
-
 const loginUser = async(rollNumber, password)=>{
 
     const user = await User.findOne({rollNumber}).select("+password");
@@ -147,7 +122,6 @@ const verifyRegistrationOtp = async (email, enteredOtp) => {
 };
 
 module.exports = {
-    registerUser,
     loginUser,
     sendRegisterOtp,
     verifyRegistrationOtp
