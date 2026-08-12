@@ -69,3 +69,11 @@ export const getMyRecentResources = async() =>{
 
   return response.data;
 }
+
+export const downloadResource = async (id) => {
+
+    const response = await API.get(
+        `/resources/${id}/download`
+    );
+    return response.data.data;
+};

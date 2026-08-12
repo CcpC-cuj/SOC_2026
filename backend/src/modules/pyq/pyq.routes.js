@@ -28,4 +28,9 @@ router.get(
     pyqController.getPyqById
 );
 
+router.get(
+    "/:id/download",
+    pyqController.downloadPyq
+);
+
 module.exports = router;

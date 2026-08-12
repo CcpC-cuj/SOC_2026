@@ -146,9 +146,34 @@ const getMyRecentResources = async (userId) => {
         .select("title semester downloads");
 };
 
+const downloadResource = async(id)=>{
+    const resource = await Resource.findByIdAndUpdate(
+        {
+            _id:id,
+            approved: true
+        },
+        {
+            $inc:{downloads:1}
+        },
+        {
+            new: true
+        }
+    );
+
+    if(!resource){
+        throw new ApiError(404, "Resource not found");
+    }
+
+    return{
+        fileUrl: resource.fileUrl,
+        originalFileName: resource.originalFileName
+    };
+};
+
 module.exports = {
     createResource,
     getAllResources,
     getResourceById,
-    getMyRecentResources
+    getMyRecentResources,
+    downloadResource,
 };

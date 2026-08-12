@@ -130,7 +130,29 @@ const getPyqById = async (pyqId) => {
     }
 
     return pyq;
+};
 
+const downloadPyq = async(id)=>{
+    const pyq = await PYQ.findByIdAndUpdate(
+        {
+            _id:id,
+            approved: true
+        },
+        {
+            $inc:{downloads:1}
+        },
+        {
+            new: true
+        }
+    );
+
+    if(!pyq){
+        throw new ApiError(404, "Pyq not found");
+    }
+
+    return{
+        fileUrl: pyq.fileUrl
+    };
 };
 
 
@@ -138,4 +160,5 @@ module.exports = {
     uploadPyq,
     getAllPyqs,
     getPyqById,
+    downloadPyq,
 };

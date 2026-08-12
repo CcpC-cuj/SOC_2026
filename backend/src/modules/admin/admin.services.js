@@ -1,6 +1,7 @@
 const User = require("../user/user.model");
 const Resource = require("../resource/resource.model");
 const PYQ = require("../pyq/pyq.model");
+const ApiError = require("../../utils/ApiError");
 
 const getDashboard = async () => {
 
@@ -79,9 +80,23 @@ const approvePyq = async (pyqId) => {
         throw new ApiError(404, "PYQ not found");
     }
 
+    if (pyq.approved) {
+        throw new ApiError(400, "PYQ already approved");
+    }
+    
+
     pyq.approved = true;
 
     await pyq.save();
+
+    await User.findByIdAndUpdate(
+        pyq.uploadedBy,
+        {
+            $inc: {
+                contributionScore: 1
+            }
+        }
+    );
 
     return pyq;
 
@@ -115,6 +130,14 @@ const approveResource = async(id)=>{
 
     resource.approved = true;
     await resource.save();
+    await User.findByIdAndUpdate(
+        resource.uploadedBy,
+        {
+            $inc: {
+                contributionScore: 1
+            }
+        }
+    );
     return resource;
 };
 

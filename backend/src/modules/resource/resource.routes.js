@@ -19,6 +19,8 @@ router.get("/my/recent",authMiddleware, resourceController.getMyRecentResources)
 router.post("/", authMiddleware, upload.single("file"), resourceController.createResource);
 
 router.get("/:id", resourceController.getResourceById);
+router.get("/:id/download", resourceController.downloadResource);
+
 
 
 

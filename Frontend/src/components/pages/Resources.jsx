@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Pill, Btn, Select, PageWrap } from "../ui";
-import { getResources } from "../../api/resources";
+import { getResources, downloadResource } from "../../api/resources";
 import UploadResourceModal from "../UploadResourceModal";
 
 export default function Resources({ onNavigate }) {
@@ -44,6 +44,39 @@ export default function Resources({ onNavigate }) {
       setLoading(false);
     }
   };
+
+  const handleDownload = async (resource) => {
+    try {
+
+        const data = await downloadResource(
+            resource._id
+        );
+
+        const link = document.createElement("a");
+
+        link.href = data.fileUrl;
+
+        link.download =
+            data.originalFileName ||
+            "resource.pdf";
+
+        link.target = "_blank";
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        document.body.removeChild(link);
+
+    } catch (err) {
+
+        console.error(err);
+
+        setError(
+            "Failed to download resource"
+        );
+    }
+};
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -291,6 +324,17 @@ export default function Resources({ onNavigate }) {
                 }}
               >
                 Explain 🧠
+              </Btn>
+
+              <Btn
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownload(resource);
+                  }}
+              >
+                  ↓ Download
               </Btn>
             </div>
           </div>

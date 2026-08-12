@@ -55,9 +55,18 @@ const getMyRecentResources = asyncHandler(async (req, res) => {
     );
 });
 
+const downloadResource = asyncHandler(async(req, res)=>{
+    const result = await resourceService.downloadResource(req.params.id);
+    res.status(200).json(
+        new ApiResponse(200, "File start Dowloading", result)
+    );
+});
+
+
 module.exports = {
     createResource,
     getAllResources,
     getResourceById,
-    getMyRecentResources
+    getMyRecentResources,
+    downloadResource
 };

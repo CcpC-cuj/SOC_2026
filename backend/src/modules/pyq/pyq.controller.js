@@ -66,9 +66,17 @@ const getPyqById = asyncHandler(async (req, res) => {
 
 });
 
+const downloadPyq = asyncHandler(async(req, res)=>{
+    const result = await pyqService.downloadPyq(req.params.id);
+    res.status(200).json(
+        new ApiResponse(200, "File start Dowloading", result)
+    );
+});
+
 
 module.exports = {
     uploadPyq,
     getAllPyqs,
     getPyqById,
+    downloadPyq,
 };

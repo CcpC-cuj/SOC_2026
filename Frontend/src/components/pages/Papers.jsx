@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, Pill, Btn, SectionTitle, TabBar, StatCard, PageWrap, Select } from "../ui";
-import { getAllPyqs } from "../../api/pyq";
+import { getAllPyqs, downloadPyq } from "../../api/pyq";
 import UploadPyqModal from "../UploadPyqModel";
 
 const TOPICS = [
@@ -22,6 +22,39 @@ const PREDICTIONS = [
 ];
 
 function PaperRow({ paper, onNavigate }) {
+
+    const handleDownload = async (pyq) => {
+  
+      try {
+  
+          const data = await downloadPyq(
+              pyq._id
+          );
+  
+          const link = document.createElement("a");
+  
+          link.href = data.fileUrl;
+  
+          link.download ="pyq.pdf";
+  
+          link.target = "_blank";
+  
+          document.body.appendChild(link);
+  
+          link.click();
+  
+          document.body.removeChild(link);
+  
+      } catch (err) {
+  
+          console.error(err);
+  
+          setError(
+              "Failed to download resource"
+          );
+      }
+  };
+
   return (
     <div className="flex items-center gap-3 p-3 bg-[#f5efdc] border border-black/10 rounded-xl mb-1.5 hover:border-white/15 transition-colors">
       <div className="w-9 h-9 rounded-lg bg-red-500/10 flex items-center justify-center text-red-400 text-base shrink-0">📄</div>
@@ -37,6 +70,16 @@ function PaperRow({ paper, onNavigate }) {
           <Btn variant="ghost" size="sm">👁️ Preview</Btn>
         </a>
         <Btn variant="ghost" size="sm" onClick={() => onNavigate("doubts")}>Practise 🧠</Btn>
+        <Btn
+                  variant="ghost"
+                  size="sm"
+                  onClick={(e) => {
+                      e.stopPropagation();
+                      handleDownload(paper);
+                  }}
+              >
+                  ↓ Download
+              </Btn>
       </div>
     </div>
   );

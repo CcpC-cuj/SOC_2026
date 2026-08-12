@@ -56,6 +56,8 @@ const checkRateLimit = async(email)=>{
 
 const sendEmail = async ({to, subject, text,}) => {
 
+    await checkRateLimit(to);
+    
     await transporter.sendMail({
         from: process.env.SMTP_USER,
         to,

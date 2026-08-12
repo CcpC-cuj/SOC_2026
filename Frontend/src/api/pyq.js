@@ -35,3 +35,12 @@ export const deletePyq = async (id) => {
     const { data } = await API.delete(`${BASE_URL}/${id}`);
     return data;
 };
+
+export const downloadPyq = async (id) => {
+
+    const response = await API.get(
+        `/pyqs/${id}/download`
+    );
+
+    return response.data.data;
+};
