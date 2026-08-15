@@ -1,6 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import logo from "../../assets/cuj-logo.png";
-import { RESOURCES, PAPERS, PROJECTS } from "../../data/content";
+import {
+  getNotifications,
+  markNotificationAsRead,
+  markAllNotificationsAsRead,
+} from "../../api/notifications";
 
 const SEARCHABLE_PAGES = [
   { key: "dashboard", label: "Dashboard", hint: "Overview & activity" },
@@ -13,12 +17,6 @@ const SEARCHABLE_PAGES = [
   { key: "profile", label: "My Profile", hint: "Your profile & resume" },
 ];
 
-const MOCK_NOTIFICATIONS = [
-  { id: 1, text: "Rahul commented on your \"Smart Traffic Controller\" project.", time: "5m ago", unread: true },
-  { id: 2, text: "New OS Unit 4 Notes uploaded by faculty.", time: "1h ago", unread: true },
-  { id: 3, text: "Your AI Resume Screener team is now full (4/4).", time: "Yesterday", unread: false },
-];
-
 function matches(text, q) {
   return text.toLowerCase().includes(q);
 }
@@ -28,7 +26,9 @@ export default function Header({ onNavigate, onLogout, userRole, user }) {
   const [showSearchResults, setShowSearchResults] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const [notifications, setNotifications] = useState(MOCK_NOTIFICATIONS);
+  
+  const [notifications, setNotifications] =useState([]);
+  const [loadingNotifications, setLoadingNotifications] =useState(false);
 
   const searchRef = useRef(null);
   const notifRef = useRef(null);
@@ -60,7 +60,30 @@ export default function Header({ onNavigate, onLogout, userRole, user }) {
 
   const hasAnyResults = filteredPages.length > 0 || filteredResources.length > 0 || filteredPapers.length > 0 || filteredProjects.length > 0;
 
-  const unreadCount = notifications.filter((n) => n.unread).length;
+  const unreadCount = notifications.filter(
+    (notification) => !notification.read
+  ).length;
+
+  const fetchNotifications = async () => {
+    try {
+      setLoadingNotifications(true);
+
+      const data = await getNotifications();
+
+      setNotifications(data);
+    } catch (err) {
+      console.error(
+        "Failed to fetch notifications:",
+        err
+      );
+    } finally {
+      setLoadingNotifications(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchNotifications();
+  }, []);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
@@ -79,7 +102,67 @@ export default function Header({ onNavigate, onLogout, userRole, user }) {
     setShowSearchResults(false);
   };
 
-  const markAllRead = () => setNotifications((ns) => ns.map((n) => ({ ...n, unread: false })));
+  const markAllRead = async () => {
+    try {
+      await markAllNotificationsAsRead();
+
+      setNotifications((notifications) =>
+        notifications.map((notification) => ({
+          ...notification,
+          read: true,
+        }))
+      );
+    } catch (err) {
+      console.error(
+        "Failed to mark notifications as read:",
+        err
+      );
+    }
+  };
+
+  const handleNotificationClick = async (
+  notification
+  ) => {
+    try {
+
+      if (!notification.read) {
+
+        await markNotificationAsRead(
+          notification._id
+        );
+
+        setNotifications((notifications) =>
+          notifications.map((item) =>
+            item._id === notification._id
+              ? {
+                  ...item,
+                  read: true,
+                }
+              : item
+          )
+        );
+      }
+
+      // Navigate based on notification type
+      if (
+        notification.referenceType === "Resource"
+      ) {
+        onNavigate("resources");
+      }
+
+      if (
+        notification.referenceType === "PYQ"
+      ) {
+        onNavigate("papers");
+      }
+
+    } catch (err) {
+      console.error(
+        "Failed to mark notification as read:",
+        err
+      );
+    }
+  };
 
   return (
     <header className="h-14 bg-gradient-to-r from-blue-700 via-blue-600 to-green-600 border-b-2 border-yellow-300 flex items-center px-5 gap-4 shrink-0 z-20 shadow-sm relative">
@@ -191,11 +274,18 @@ export default function Header({ onNavigate, onLogout, userRole, user }) {
         {/* Notifications */}
         <div ref={notifRef} className="relative">
           <button
-            onClick={() => { setShowNotifications((v) => !v); setShowSettings(false); }}
-            className="relative w-8 h-8 rounded-lg border border-white/30 text-white hover:bg-white/10 flex items-center justify-center bg-transparent cursor-pointer">
+            onClick={() => {
+              setShowNotifications((v) => !v);
+              setShowSettings(false);
+            }}
+            className="relative w-8 h-8 rounded-lg border border-white/30 text-white hover:bg-white/10 flex items-center justify-center bg-transparent cursor-pointer"
+          >
             🔔
+          
             {unreadCount > 0 && (
-              <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-yellow-300 border-2 border-blue-600" />
+              <span className="absolute -top-1 -right-1 min-w-4 h-4 px-1 rounded-full bg-yellow-300 text-blue-900 text-[9px] font-bold flex items-center justify-center border-2 border-blue-600">
+                {unreadCount > 9 ? "9+" : unreadCount}
+              </span>
             )}
           </button>
 
@@ -211,19 +301,145 @@ export default function Header({ onNavigate, onLogout, userRole, user }) {
                 )}
               </div>
               <div className="max-h-72 overflow-y-auto">
-                {notifications.length === 0 ? (
-                  <div className="px-4 py-6 text-sm text-[#5a6a85] text-center">You're all caught up.</div>
-                ) : (
-                  notifications.map((n) => (
-                    <div key={n.id} className={`px-4 py-3 border-b border-black/5 last:border-b-0 flex gap-2.5 ${n.unread ? "bg-blue-50/50" : ""}`}>
-                      {n.unread && <div className="w-1.5 h-1.5 rounded-full bg-blue-500 mt-1.5 shrink-0" />}
-                      <div className={n.unread ? "" : "ml-4"}>
-                        <p className="text-[13px] text-[#1a2540] leading-snug">{n.text}</p>
-                        <p className="text-[11px] text-[#5a6a85] mt-0.5">{n.time}</p>
-                      </div>
-                    </div>
-                  ))
-                )}
+
+                {loadingNotifications ? (
+
+  <div className="px-4 py-8 text-sm text-[#5a6a85] text-center">
+    Loading notifications...
+  </div>
+
+) : notifications.length === 0 ? (
+
+  <div className="px-4 py-8 text-sm text-[#5a6a85] text-center">
+    You're all caught up ✨
+  </div>
+
+) : (
+
+  <div className="p-2 space-y-1.5">
+
+    {notifications.map((notification) => (
+
+      <button
+        key={notification._id}
+        onClick={() =>
+          handleNotificationClick(notification)
+        }
+        className={`group relative w-full text-left rounded-xl px-3 py-3
+          flex gap-3 transition-all duration-200
+          cursor-pointer border
+          ${
+            notification.read
+              ? "bg-[#fbf7ec] border-transparent hover:bg-[#f5efdc]"
+              : "bg-[#f1ead3] border-[#e5dbc0] hover:bg-[#ebe2c8] hover:border-[#d8cba8]"
+          }
+        `}
+      >
+
+        {/* Unread accent */}
+        {!notification.read && (
+          <div className="absolute left-0 top-3 bottom-3 w-0.5 rounded-full bg-[#1a2540]" />
+        )}
+
+        {/* Notification icon */}
+        <div
+          className={`w-9 h-9 rounded-lg shrink-0 flex items-center justify-center text-sm
+            ${
+              notification.read
+                ? "bg-[#f1ead3] text-[#5a6a85]"
+                : "bg-[#e5dbc0] text-[#1a2540]"
+            }
+          `}
+        >
+          {notification.type === "resource_approved" && "📚"}
+
+          {notification.type === "pyq_approved" && "📄"}
+
+          {notification.type === "resource_deleted" && "🗑️"}
+
+          {notification.type === "pyq_deleted" && "🗑️"}
+
+          {notification.type === "project_join_request" && "👥"}
+
+          {notification.type === "project_request_approved" && "✓"}
+
+          {![
+            "resource_approved",
+            "pyq_approved",
+            "resource_deleted",
+            "pyq_deleted",
+            "project_join_request",
+            "project_request_approved",
+          ].includes(notification.type) && "🔔"}
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+
+          <div className="flex items-start justify-between gap-2">
+
+            <p
+              className={`text-[13px] leading-snug ${
+                notification.read
+                  ? "font-medium text-[#1a2540]"
+                  : "font-semibold text-[#1a2540]"
+              }`}
+            >
+              {notification.title}
+            </p>
+
+            {/* Unread dot */}
+            {!notification.read && (
+              <span className="w-1.5 h-1.5 rounded-full bg-[#1a2540] mt-1.5 shrink-0" />
+            )}
+
+          </div>
+
+          <p
+            className={`text-[11px] leading-relaxed mt-1 ${
+              notification.read
+                ? "text-[#6b7890]"
+                : "text-[#4b5b73]"
+            }`}
+          >
+            {notification.message}
+          </p>
+
+          <div className="flex items-center gap-2 mt-2">
+
+            <span className="text-[10px] text-[#8791a1]">
+              {new Date(
+                notification.createdAt
+              ).toLocaleString([], {
+                day: "numeric",
+                month: "short",
+                hour: "2-digit",
+                minute: "2-digit",
+              })}
+            </span>
+
+            {!notification.read && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-[#b9af95]" />
+
+                <span className="text-[9px] font-semibold uppercase tracking-wide text-[#1a2540]">
+                  New
+                </span>
+              </>
+            )}
+
+          </div>
+
+        </div>
+
+      </button>
+
+    ))}
+
+  </div>
+
+)}
+
               </div>
             </div>
           )}

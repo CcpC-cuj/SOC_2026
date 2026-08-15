@@ -2,6 +2,7 @@ const User = require("../user/user.model");
 const Resource = require("../resource/resource.model");
 const PYQ = require("../pyq/pyq.model");
 const ApiError = require("../../utils/ApiError");
+const notificationService = require("../notification/notification.service");
 
 const getDashboard = async () => {
 
@@ -98,6 +99,15 @@ const approvePyq = async (pyqId) => {
         }
     );
 
+    await notificationService.createNotification({
+        recipient: pyq.uploadedBy,
+        type: "pyq_approved",
+        title: "PYQ Approved",
+        message: `Your PYQ "${pyq.title}" has been approved.`,
+        referenceId: pyq._id,
+        referenceType: "PYQ"
+    });
+
     return pyq;
 
 };
@@ -110,6 +120,15 @@ const deletePyq = async (pyqId) => {
         throw new ApiError(404, "PYQ not found");
     }
 
+    await notificationService.createNotification({
+        recipient: pyq.uploadedBy,
+        type: "pyq_deleted",
+        title: "PYQ Deleted!",
+        message: `Your PYQ "${pyq.title}" has been Rejected.`,
+        referenceId: pyq._id,
+        referenceType: "PYQ"
+    });
+    
     await pyq.deleteOne();
 
     return;
@@ -138,6 +157,15 @@ const approveResource = async(id)=>{
             }
         }
     );
+
+    await notificationService.createNotification({
+        recipient: resource.uploadedBy,
+        type: "resource_approved",
+        title: "Resource Approved",
+        message: `Your resource "${resource.title}" has been approved.`,
+        referenceId: resource._id,
+        referenceType: "Resource"
+    });
     return resource;
 };
 
@@ -147,6 +175,15 @@ const deleteResource = async(id)=>{
     if(!resource){
         throw new ApiError(404, "Resource not found!");
     }
+
+    await notificationService.createNotification({
+        recipient: resource.uploadedBy,
+        type: "resource_deleted",
+        title: "Resource Deleted",
+        message: `Your resource "${resource.title}" has been approved.`,
+        referenceId: resource._id,
+        referenceType: "Resource"
+    });
 
     await Resource.findByIdAndDelete(id);
 
