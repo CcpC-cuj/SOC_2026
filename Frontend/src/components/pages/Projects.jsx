@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Pill, Btn, FilterChips, PageWrap, Avatar } from "../ui";
+import { createConversation } from "../../api/conversations";
 
 import {
   getProjects,
@@ -28,6 +29,8 @@ export default function Projects({ onNavigate, user }) {
   const [pendingProjects, setPendingProjects] = useState([]);
   const [approving, setApproving] = useState({});
   const [rejecting, setRejecting] = useState({});
+
+  const [messaging, setMessaging] = useState({});
 
   const [showCreateModal, setShowCreateModal] = useState(false);
 
@@ -210,6 +213,36 @@ export default function Projects({ onNavigate, user }) {
 
   };
 
+  const handleMessage = async (userId) => {
+  try {
+    setMessaging((prev) => ({
+      ...prev,
+      [userId]: true
+    }));
+
+    const conversation =
+      await createConversation(userId);
+
+    onNavigate("messages", {
+      conversationId: conversation._id
+    });
+
+  } catch (err) {
+    console.log(err);
+
+    alert(
+      err.response?.data?.message ||
+      "Unable to start conversation"
+    );
+
+  } finally {
+    setMessaging((prev) => ({
+      ...prev,
+      [userId]: false
+    }));
+  }
+};
+
   if (loading) {
 
     return (
@@ -322,10 +355,17 @@ export default function Projects({ onNavigate, user }) {
                 )}
 
                 <button
-                  onClick={() => onNavigate("messages")}
-                  className="flex-1 border rounded-lg py-1 text-xs"
+                  onClick={() => handleMessage(p.owner._id)}
+                  disabled={messaging[p.owner._id]}
+                  className={`flex-1 border rounded-lg py-1 text-xs transition ${
+                    messaging[p.owner._id]
+                      ? "opacity-50 cursor-not-allowed"
+                      : "hover:bg-[#ece4c8]"
+                  }`}
                 >
-                  Message
+                  {messaging[p.owner._id]
+                    ? "Opening..."
+                    : "Message"}
                 </button>
 
                 {p.owner._id === user._id ? (
